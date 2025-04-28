@@ -1,0 +1,54 @@
+const express = require("express");
+const app = express();
+
+// 🔹 Import Routes
+const authRoutes = require("./auth-routes");
+const otpRoutes = require("./otp-routes");
+const fileRoutes = require("./file-routes");
+const profileRoutes = require("./profile-routes");
+const eventRoutes = require("./event-routes");
+const commentRoutes = require("./comment-routes");
+const replyRoutes = require("./reply-routes");
+const chatRoutes = require("./chat-routes");
+const realTimeRoutes = require("./realtime-routes");
+const likeRoutes = require("./like-routes");
+const shareRoutes = require("./share-routes");
+const socialRoutes = require("./social-routes");
+const reportRoutes = require("./report-routes");
+const blockRoutes = require("./block-routes");
+const toggleRoutes = require("./toggle-routes");
+const subscriptionRoutes = require("./subscription-routes");
+
+// 🔹 Import Middlewares
+const userAuthentication = require("../../middlewares/user-authentication-middleware");
+const sessionAuthorization = require("../../middlewares/session-verification-middleware");
+const accountStatus = require("../../middlewares/account-status-middleware");
+const userVerification = require("../../middlewares/user-verification-middleware");
+
+// 🔹 Apply Global Middlewares
+const middlewares = [
+  userAuthentication,
+  sessionAuthorization,
+  accountStatus,
+  userVerification
+];
+
+// 🔹 Register Routes
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/otps", otpRoutes);
+app.use("/api/v1/files", middlewares, fileRoutes);
+app.use("/api/v1/profiles", middlewares, profileRoutes);
+app.use("/api/v1/events", middlewares, eventRoutes);
+app.use("/api/v1/comments", middlewares, commentRoutes);
+app.use("/api/v1/replies", middlewares, replyRoutes);
+app.use("/api/v1/realtime", middlewares, realTimeRoutes);
+app.use("/api/v1/chats", middlewares, chatRoutes);
+app.use("/api/v1/likes", middlewares, likeRoutes);
+app.use("/api/v1/shares", middlewares, shareRoutes);
+app.use("/api/v1/social", middlewares, socialRoutes);
+app.use("/api/v1/reports", middlewares, reportRoutes);
+app.use("/api/v1/blocks", middlewares, blockRoutes);
+app.use("/api/v1/toggles", middlewares, toggleRoutes);
+app.use("/api/v1/subscription", middlewares, subscriptionRoutes);
+
+module.exports = app;
