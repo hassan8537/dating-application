@@ -13,17 +13,17 @@ const path = require("path");
 const adminSeeder = require("./src/middlewares/admin-seeder-middleware");
 
 const port = process.env.PORT || 3000;
-const node_env = process.env.NODE_ENV || "development";
-const secret_key = process.env.SECRET_KEY;
-const max_age = Number(process.env.MAX_AGE) || 2592000000;
-const base_url = process.env.BASE_URL;
+const nodeEnv = process.env.NODE_ENV || "development";
+const secretKey = process.env.SECRET_KEY;
+const maxAge = Number(process.env.MAX_AGE) || 2592000000;
+const baseUrl = process.env.BASE_URL;
 
 const app = express();
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const server =
-  node_env === "production"
+  nodeEnv === "production"
     ? (() => {
         try {
           const options = {
@@ -50,10 +50,10 @@ const server =
 
 app.use(
   session({
-    secret: secret_key,
+    secret: secretKey,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: max_age }
+    cookie: { maxAge: maxAge }
   })
 );
 
@@ -71,10 +71,9 @@ app.use(userRoutes);
 
 const io = new Server(server, {
   cors: {
-    origin:
-      node_env === "production" ? process.env.ALLOWED_ORIGINS.split(",") : "*",
+    origin: "*",
     methods: ["GET", "POST", "PATCH", "DELETE"],
-    credentials: node_env === "production",
+    credentials: nodeEnv === "production",
     transports: ["websocket", "polling"],
     allowEIO3: true
   }
@@ -83,38 +82,38 @@ const io = new Server(server, {
 io.on("connection", async (socket) => {
   handlers.logger.success({ message: `New socket connected: ${socket.id}` });
 
-  const chat_controller = require("./src/controllers/users/chat-controller");
+  const chatController = require("./src/controllers/users/chat-controller");
 
-  socket.on("new-chat", async ({ sender_id, receiver_id, text }) => {
+  socket.on("new-chat", async ({ senderId, receiverId, text }) => {
     try {
-      const new_chat = await chat_controller.newChat({
-        sender_id,
-        receiver_id,
+      const newChat = await chatController.newChat({
+        senderId,
+        receiverId,
         text
       });
 
-      return socket.emit("response", new_chat);
+      return socket.emit("response", newChat);
     } catch (error) {
       handlers.logger.error({ message: error });
       return socket.emit(
         "error",
         handlers.event.error({
-          object_type: "error",
+          objectType: "error",
           message: "Failed to send message"
         })
       );
     }
   });
 
-  socket.on("get-chats", async ({ sender_id, receiver_id }) => {
+  socket.on("get-chats", async ({ senderId, receiverId }) => {
     try {
-      const chats = await chat_controller.getChats({ sender_id, receiver_id });
+      const chats = await chatController.getChats({ senderId, receiverId });
 
       handlers.logger.success({ message: "Messages", data: chats });
       return socket.emit(
         "response",
         handlers.event.success({
-          object_type: "chats",
+          objectType: "chats",
           message: "Messages",
           data: chats
         })
@@ -124,7 +123,7 @@ io.on("connection", async (socket) => {
       return socket.emit(
         "error",
         handlers.event.error({
-          object_type: "error",
+          objectType: "error",
           message: "Couldn't refresh messages"
         })
       );
@@ -135,6 +134,6 @@ io.on("connection", async (socket) => {
 server.listen(port, () => {
   connectToDatabase();
   handlers.logger.success({
-    message: `Courageous Connection is live at ${base_url}`
+    message: `Courageous Connection is live at ${baseUrl}`
   });
 });
