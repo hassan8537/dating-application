@@ -14,35 +14,44 @@ class Service {
   }
 
   async generateAndSendOtp(user, deviceToken, res) {
+    const existingOtp = await this.otp.findOne({ userId: user._id });
+    const now = new Date();
+    if (existingOtp && existingOtp.expiresIn > now) {
+      // Reuse existing valid OTP
+      await sendEmail({
+        to: user.email,
+        subject: "Account Verification",
+        text: `Your verification code is: ${existingOtp.code}`
+      });
+      const token = generateToken({ _id: user._id, res });
+      user.sessionToken = token;
+      user.deviceToken = deviceToken;
+      user.isVerified = false;
+      await user.save();
+      await user.populate(userSchema.populate);
+      return { user, token };
+    }
+    // Otherwise, generate a new OTP
     const otpCode = generateOtp();
     const expiresIn = new Date(Date.now() + otpExpirationMinutes * 60 * 1000);
-
-    // Using Promise.all to run independent DB operations in parallel
-    await Promise.all([
-      this.otp.deleteOne({ userId: user._id }),
-      this.otp.create({
-        userId: user._id,
-        code: otpCode,
-        expiresIn,
-        type: "email-verification"
-      })
-    ]);
-
+    await this.otp.deleteOne({ userId: user._id });
+    await this.otp.create({
+      userId: user._id,
+      code: otpCode,
+      expiresIn,
+      type: "email-verification"
+    });
     const token = generateToken({ _id: user._id, res });
     user.sessionToken = token;
     user.deviceToken = deviceToken;
-
-    // Only save user once instead of saving after each field change
+    user.isVerified = false;
     await user.save();
     await user.populate(userSchema.populate);
-
-    // Send emailAddress asynchronously, don't await here for better performance
-    sendEmail({
-      to: user.emailAddress,
+    await sendEmail({
+      to: user.email,
       subject: "Account Verification",
       text: `Your verification code is: ${otpCode}`
     });
-
     return { user, token };
   }
 
