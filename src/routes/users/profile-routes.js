@@ -14,22 +14,13 @@ router.post("/relationship", controller.setRelationship.bind(controller));
 
 router.post("/feelings", controller.setFeelings.bind(controller));
 
-router.post(
-  "/upload-your-photos-&-videos",
-  controller.uploadYourPhotosAndVideos.bind(controller)
-);
+router.post("/gallery", controller.uploadYourPhotosAndVideos.bind(controller));
 
-router.post(
-  "/add-your-interests",
-  controller.addYourInterests.bind(controller)
-);
+router.post("/interests", controller.addYourInterests.bind(controller));
 
-router.post("/add-your-hobbies", controller.addYourHobbies.bind(controller));
+router.post("/hobbies", controller.addYourHobbies.bind(controller));
 
-router.post(
-  "/add-your-professions",
-  controller.addYourProfessions.bind(controller)
-);
+router.post("/professions", controller.addYourProfessions.bind(controller));
 
 router.post(
   "/upload-certificates",
