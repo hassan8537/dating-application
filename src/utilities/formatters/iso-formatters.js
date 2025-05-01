@@ -1,22 +1,26 @@
 exports.timeToISODate = (timeStr) => {
-  const now = new Date();
-  const [time, modifier] = timeStr.split(" ");
-  let [hours, minutes] = time.split(":");
+  if (!timeStr) {
+    return null;
+  } else {
+    const now = new Date();
+    const [time, modifier] = timeStr.split(" ");
+    let [hours, minutes] = time.split(":");
 
-  hours = parseInt(hours, 10);
-  if (modifier.toUpperCase() === "PM" && hours !== 12) {
-    hours += 12;
+    hours = parseInt(hours, 10);
+    if (modifier.toUpperCase() === "PM" && hours !== 12) {
+      hours += 12;
+    }
+    if (modifier.toUpperCase() === "AM" && hours === 12) {
+      hours = 0;
+    }
+
+    now.setUTCHours(hours);
+    now.setUTCMinutes(parseInt(minutes, 10));
+    now.setUTCSeconds(0);
+    now.setUTCMilliseconds(0);
+
+    return now.toISOString();
   }
-  if (modifier.toUpperCase() === "AM" && hours === 12) {
-    hours = 0;
-  }
-
-  now.setUTCHours(hours);
-  now.setUTCMinutes(parseInt(minutes, 10));
-  now.setUTCSeconds(0);
-  now.setUTCMilliseconds(0);
-
-  return now.toISOString();
 };
 
 exports.isoDateToTime = (isoDateStr) => {
