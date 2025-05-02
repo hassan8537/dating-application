@@ -35,4 +35,6 @@ router.post("/", controller.deleteAccount.bind(controller));
 
 router.put("/change-password", controller.changePassword.bind(controller));
 
+router.get("/signout", controller.signOut.bind(controller));
+
 module.exports = router;

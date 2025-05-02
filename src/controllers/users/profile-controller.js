@@ -66,6 +66,10 @@ class Controller {
   async changePassword(req, res) {
     await this.service.changePassword(req, res);
   }
+
+  async signOut(req, res) {
+    await this.service.signOut(req, res);
+  }
 }
 
 module.exports = new Controller();

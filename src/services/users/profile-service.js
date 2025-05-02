@@ -659,6 +659,35 @@ class Service {
     }
   }
 
+  // sign out
+  async signOut(req, res) {
+    try {
+      req.session.destroy((err) => {
+        if (err) {
+          handlers.logger.error({ message: err });
+          return handlers.response.error({
+            res,
+            message: "Failed to sign out"
+          });
+        }
+
+        res.clearCookie("authorization", {
+          path: "/",
+          httpOnly: true,
+          sameSite: "lax"
+        });
+
+        return handlers.response.success({
+          res,
+          message: "Sign out successful"
+        });
+      });
+    } catch (error) {
+      handlers.logger.error({ message: error });
+      return handlers.response.error({ res, message: error.message });
+    }
+  }
+
   // Others
   // async getProfiles(req, res) {
   //   try {
