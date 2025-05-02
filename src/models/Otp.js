@@ -5,9 +5,9 @@ const OTP_EXPIRATION_SECONDS = process.env.OTP_EXPIRATION_SECONDS;
 const schema = new Schema(
   {
     userId: {
-      type: String,
-      required: true,
-      ref: "User"
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
     },
     code: {
       type: Number,

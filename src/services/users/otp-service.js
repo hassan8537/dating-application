@@ -49,7 +49,7 @@ class Service {
         return handlers.response.failed({ res, message: "OTP expired" });
       }
 
-      await this.otp.updateOne({ _id: otpRecord._id }, { isUsed: true });
+      await this.otp.deleteOne({ _id: otpRecord._id });
 
       await this.user.updateOne({ _id: userId }, { deviceToken });
 
