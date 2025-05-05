@@ -1,5 +1,5 @@
 const userSchema = {
-  populate: [{ path: "" }]
+  populate: []
 };
 
 module.exports = userSchema;
