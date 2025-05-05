@@ -4,6 +4,10 @@ const path = require("path");
 const fs = require("fs");
 const fileSchema = require("../../schemas/file-schema");
 const pagination = require("../../utilities/pagination/pagination");
+const mime = require("mime-types");
+const {
+  generateThumbnail
+} = require("../../utilities/generators/thumnail-generator");
 
 class Service {
   constructor() {
@@ -69,16 +73,37 @@ class Service {
       const filesToSave = [];
 
       for (const fieldname in req.files) {
-        req.files[fieldname].forEach((file) => {
-          filesToSave.push({
+        for (const file of req.files[fieldname]) {
+          let mimetype = file.mimetype;
+          if (!mimetype || mimetype === "application/octet-stream") {
+            mimetype =
+              mime.lookup(file.originalname) || "application/octet-stream";
+          }
+
+          const fileData = {
             user_id,
             name: file.originalname,
             field: file.fieldname,
-            type: file.mimetype,
+            type: mimetype,
             size: file.size,
             path: file.path
-          });
-        });
+          };
+
+          // If video, generate a thumbnail
+          if (mimetype.startsWith("video/") && file.path) {
+            try {
+              const thumbnailPath = await generateThumbnail(file.path);
+              fileData.thumbnail = thumbnailPath;
+            } catch (err) {
+              handlers.logger.error({
+                message: `Failed to generate thumbnail for ${file.originalname}`,
+                error: err
+              });
+            }
+          }
+
+          filesToSave.push(fileData);
+        }
       }
 
       handlers.logger.success({
