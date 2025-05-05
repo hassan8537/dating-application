@@ -1,5 +1,5 @@
 const userSchema = {
-  populate: [{ path: "followers following blockedUsers reportedUsers" }]
+  populate: [{ path: "" }]
 };
 
 module.exports = userSchema;
