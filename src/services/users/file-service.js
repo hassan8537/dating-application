@@ -54,6 +54,8 @@ class Service {
 
   async createFile(req, res) {
     try {
+      console.log(req.files);
+
       if (!req.files || Object.keys(req.files).length === 0) {
         handlers.logger.failed({ message: "No files uploaded" });
 
