@@ -27,10 +27,6 @@ const userSchema = new Schema(
       default: "email"
     },
     averageRating: { type: Number, min: 0, max: 5, default: 0 },
-    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    following: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    blockedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    reportedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
     role: {
       type: String,
       enum: ["admin", "user"],
@@ -44,6 +40,8 @@ const userSchema = new Schema(
     isProfileCompleted: { type: Boolean, default: false },
     isSelfieVerified: { type: Boolean, default: false },
     isSubscribed: { type: Boolean, default: false },
+    isSosActivated: { type: Boolean, default: false },
+    isAnonymousProfile: { type: Boolean, default: false },
     receiptToken: { type: String, default: null },
     profilePicture: { type: String, trim: true, default: null },
     avatar: { type: String, trim: true, default: null },
@@ -98,7 +96,13 @@ const userSchema = new Schema(
       trim: true,
       default: null
     },
-    gallery: [{ type: String, trim: true, default: null }],
+    gallery: [
+      {
+        type: { type: String, enum: ["image", "video"], required: true },
+        url: { type: String, required: true, trim: true },
+        thumbnail: { type: String, trim: true, default: null }
+      }
+    ],
     interests: [{ type: String, default: null }],
     hobbies: [{ type: String, default: null }],
     professions: [{ type: String, default: null }],
@@ -111,7 +115,12 @@ const userSchema = new Schema(
     myTotalFavourites: { type: Number, default: 0 },
     totalProfilesVisitedMe: { type: Number, default: 0 },
     totalProfilesIPassed: { type: Number, default: 0 },
-    totalProfilesILiked: { type: Number, default: 0 }
+    totalProfilesILiked: { type: Number, default: 0 },
+
+    totalBlockedUsers: { type: Number, default: 0 },
+    totalReportedUsers: { type: Number, default: 0 },
+    totalHiddenFromUsers: { type: Number, default: 0 },
+    totalFriends: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

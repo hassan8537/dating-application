@@ -281,21 +281,45 @@ class Service {
         return handlers.response.failed({ res, message });
       }
 
-      const profileData = {
-        gallery: body.gallery
-      };
+      // Validate and sanitize each gallery item
+      const parsedGallery = Array.isArray(body.gallery)
+        ? body.gallery
+            .map((item) => {
+              if (!item.type || !item.url) return null;
+
+              return {
+                type: item.type, // "image" or "video"
+                url: item.url.trim(),
+                thumbnail:
+                  item.type === "video" && item.thumbnail
+                    ? item.thumbnail.trim()
+                    : null
+              };
+            })
+            .filter(Boolean)
+        : [];
+
+      if (!parsedGallery.length) {
+        const message =
+          "Gallery must include at least one valid image or video object.";
+        handlers.logger.failed({ message });
+        return handlers.response.failed({ res, message });
+      }
+
+      const profileData = { gallery: parsedGallery };
 
       const profile = await this.user
         .findByIdAndUpdate(currentUser._id, profileData, { new: true })
         .populate(userSchema.populate);
 
       handlers.logger.success({
-        message: "Success",
+        message: "Gallery uploaded successfully",
         data: profile
       });
+
       return handlers.response.success({
         res,
-        message: "Success",
+        message: "Gallery uploaded successfully",
         data: profile
       });
     } catch (error) {

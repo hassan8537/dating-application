@@ -1,6 +1,6 @@
 class Controller {
   constructor() {
-    this.service = require("../../services/users/toggle-service");
+    this.service = require("../../services/users/setting-service");
   }
 
   async toggleNotifications(req, res) {
