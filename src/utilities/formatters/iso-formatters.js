@@ -1,26 +1,43 @@
 exports.timeToISODate = (timeStr) => {
   if (!timeStr) {
     return null;
-  } else {
-    const now = new Date();
-    const [time, modifier] = timeStr.split(" ");
-    let [hours, minutes] = time.split(":");
-
-    hours = parseInt(hours, 10);
-    if (modifier.toUpperCase() === "PM" && hours !== 12) {
-      hours += 12;
-    }
-    if (modifier.toUpperCase() === "AM" && hours === 12) {
-      hours = 0;
-    }
-
-    now.setUTCHours(hours);
-    now.setUTCMinutes(parseInt(minutes, 10));
-    now.setUTCSeconds(0);
-    now.setUTCMilliseconds(0);
-
-    return now.toISOString();
   }
+
+  const now = new Date();
+  const parts = timeStr.trim().split(" ");
+
+  if (parts.length !== 2) {
+    return null; // Invalid format
+  }
+
+  const [time, modifier] = parts;
+  let [hours, minutes] = time.split(":");
+
+  if (!hours || !minutes || !modifier) {
+    return null; // Missing expected components
+  }
+
+  hours = parseInt(hours, 10);
+  minutes = parseInt(minutes, 10);
+
+  if (isNaN(hours) || isNaN(minutes)) {
+    return null;
+  }
+
+  const upperModifier = modifier.toUpperCase();
+  if (upperModifier === "PM" && hours !== 12) {
+    hours += 12;
+  }
+  if (upperModifier === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  now.setUTCHours(hours);
+  now.setUTCMinutes(minutes);
+  now.setUTCSeconds(0);
+  now.setUTCMilliseconds(0);
+
+  return now.toISOString();
 };
 
 exports.isoDateToTime = (isoDateStr) => {
