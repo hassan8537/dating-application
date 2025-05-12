@@ -20,6 +20,7 @@ const toggleRoutes = require("./toggle-routes");
 const subscriptionRoutes = require("./subscription-routes");
 const contentRoutes = require("./content-routes");
 const storyRoutes = require("./story-routes");
+const settingRoutes = require("./setting-routes");
 
 // 🔹 Import Middlewares
 const userAuthentication = require("../../middlewares/user-authentication-middleware");
@@ -53,6 +54,7 @@ app.use("/api/v1/blocks", middlewares, blockRoutes);
 app.use("/api/v1/toggles", middlewares, toggleRoutes);
 app.use("/api/v1/subscription", middlewares, subscriptionRoutes);
 app.use("/api/v1/stories", middlewares, storyRoutes);
+app.use("/api/v1/settings", middlewares, storyRoutes);
 
 app.use("/api/v1/contents", contentRoutes);
 

@@ -58,29 +58,6 @@ class Service {
     }
   }
 
-  async toggleAnonymousProfile(req, res) {
-    try {
-      const currentUser = req.user;
-
-      currentUser.isAnonymousProfile = !currentUser.isAnonymousProfile;
-      await currentUser.save();
-      await currentUser.populate(userSchema.populate);
-
-      const message = `Anonymous profile ${currentUser.isAnonymousProfile ? "enabled" : "disabled"}`;
-
-      handlers.logger.success({ message, data: currentUser });
-
-      return handlers.response.success({
-        res,
-        message,
-        data: currentUser
-      });
-    } catch (error) {
-      handlers.logger.error({ message: error });
-      return handlers.response.error({ res, message: error });
-    }
-  }
-
   async togglePrivacy(req, res) {
     try {
       const currentUser = req.user;
@@ -180,7 +157,7 @@ class Service {
   async toggleBlockUnblock(req, res) {
     try {
       const { user: currentUser } = req;
-      const { userId } = req.body;
+      const { userId } = req.params;
 
       const isAlreadyBlocked = await BlockedUsers.findOne({
         user_id: currentUser._id,
@@ -217,9 +194,9 @@ class Service {
   async toggleHiddenFromUsers(req, res) {
     try {
       const { user: currentUser } = req;
-      const { userId } = req.body;
+      const { userId } = req.params;
 
-      const existingEntry = await this.hiddenFromUsersfindOne({
+      const existingEntry = await this.hiddenFromUsers.findOne({
         user_id: currentUser._id,
         hidden_from_user: userId
       });
@@ -227,12 +204,12 @@ class Service {
       let message;
 
       if (existingEntry) {
-        await this.hiddenFromUsersdeleteOne({ _id: existingEntry._id });
+        await this.hiddenFromUsers.deleteOne({ _id: existingEntry._id });
         currentUser.totalHiddenFromUsers =
           (currentUser.totalHiddenFromUsers || 0) - 1;
         message = "User removed from hidden list successfully.";
       } else {
-        await this.hiddenFromUserscreate({
+        await this.hiddenFromUsers.create({
           user_id: currentUser._id,
           hidden_from_user: userId
         });
