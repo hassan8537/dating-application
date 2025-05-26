@@ -2,19 +2,19 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    event_id: {
+    passedUser: {
       type: Schema.Types.ObjectId,
-      ref: "Event",
+      ref: "User",
       trim: true
     }
   },
   { timestamps: true }
 );
 
-const EventGoingMembers = model("EventGoingMember", schema);
-module.exports = EventGoingMembers;
+const SuperLike = model("SuperLike", schema);
+module.exports = SuperLike;

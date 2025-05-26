@@ -2,19 +2,19 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    event_id: {
+    likedUser: {
       type: Schema.Types.ObjectId,
-      ref: "Event",
+      ref: "User",
       trim: true
     }
   },
   { timestamps: true }
 );
 
-const EventLikes = model("EventLike", schema);
-module.exports = EventLikes;
+const SwipeRight = model("SwipeRight", schema);
+module.exports = SwipeRight;

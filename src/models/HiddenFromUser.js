@@ -7,7 +7,7 @@ const schema = new Schema(
       ref: "User",
       trim: true
     },
-    blocked_user: {
+    hidden_from_user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
@@ -16,5 +16,5 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-const BlockedUsers = model("BlockedUsers", schema);
-module.exports = BlockedUsers;
+const HiddenFromUser = model("HiddenFromUser", schema);
+module.exports = HiddenFromUser;

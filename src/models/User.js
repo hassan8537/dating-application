@@ -42,6 +42,9 @@ const userSchema = new Schema(
     isSubscribed: { type: Boolean, default: false },
     isSosActivated: { type: Boolean, default: false },
     isAnonymousProfile: { type: Boolean, default: false },
+    isSwipeRight: { type: Boolean, default: false },
+    isSuperLiked: { type: Boolean, default: false },
+    isSwipeLeft: { type: Boolean, default: false },
     receiptToken: { type: String, default: null },
     profilePicture: { type: String, trim: true, default: null },
     avatar: { type: String, trim: true, default: null },
@@ -120,7 +123,11 @@ const userSchema = new Schema(
     totalBlockedUsers: { type: Number, default: 0 },
     totalReportedUsers: { type: Number, default: 0 },
     totalHiddenFromUsers: { type: Number, default: 0 },
-    totalFriends: { type: Number, default: 0 }
+    totalFriends: { type: Number, default: 0 },
+
+    totalPendingFriendRequests: { type: Number, default: 0 },
+    totalAcceptedFriendRequests: { type: Number, default: 0 },
+    totalRejectedFriendRequests: { type: Number, default: 0 }
   },
   { timestamps: true }
 );
@@ -133,6 +140,18 @@ userSchema.pre("save", async function (next) {
     next();
   } catch (error) {
     next(error);
+  }
+});
+
+userSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    delete ret.password;
+    delete ret.sessionToken;
+    delete ret.socialToken;
+    delete ret.deviceToken;
+    delete ret.receiptToken;
+    delete ret.__v;
+    return ret;
   }
 });
 

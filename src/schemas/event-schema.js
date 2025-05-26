@@ -1,5 +1,5 @@
 const eventSchema = {
-  populate: [{ path: "user_id", populate: "avatar" }, { path: "photo" }]
+  populate: [{ path: "userId" }]
 };
 
 module.exports = eventSchema;

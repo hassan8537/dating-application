@@ -2,17 +2,16 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    photo: {
-      type: Schema.Types.ObjectId,
-      ref: "File",
+    image: {
+      type: String,
       trim: true
     },
-    blur_hash: {
+    blurHash: {
       type: String,
       trim: true,
       default: ""
@@ -23,10 +22,6 @@ const schema = new Schema(
       trim: true,
       default: "public"
     },
-    fee: {
-      type: Number,
-      default: 0
-    },
     title: {
       type: String,
       trim: true,
@@ -36,16 +31,8 @@ const schema = new Schema(
       type: Date,
       trim: true
     },
-    start_time: {
+    time: {
       type: Date,
-      trim: true
-    },
-    end_time: {
-      type: Date,
-      trim: true
-    },
-    duration: {
-      type: Number,
       trim: true
     },
     location: {
@@ -60,48 +47,15 @@ const schema = new Schema(
         default: [0, 0]
       }
     },
-    link: {
-      type: String,
-      trim: true
-    },
-    description: {
+    details: {
       type: String,
       trim: true,
       default: ""
     },
-    are_comments_enabled: {
-      type: Boolean,
-      trim: true,
-      default: true
-    },
-    is_reported: {
+    isReported: {
       type: Boolean,
       trim: true,
       default: false
-    },
-    total_likes: {
-      type: Number,
-      default: 0
-    },
-    total_comments: {
-      type: Number,
-      default: 0
-    },
-    total_shares: {
-      type: Number,
-      default: 0
-    },
-    total_invited: {
-      type: Number,
-      default: 0
-    },
-    total_going: {
-      type: Number,
-      default: 0
-    },
-    total_arrived: {
-      type: Number,
-      default: 0
     }
   },
   { timestamps: true }

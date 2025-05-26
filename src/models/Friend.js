@@ -2,19 +2,19 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    event_id: {
+    friendId: {
       type: Schema.Types.ObjectId,
-      ref: "Event",
+      ref: "User",
       trim: true
     }
   },
   { timestamps: true }
 );
 
-const EventInvitedMembers = model("EventInvitedMember", schema);
-module.exports = EventInvitedMembers;
+const Friends = model("Friend", schema);
+module.exports = Friends;

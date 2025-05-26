@@ -1,7 +1,8 @@
 const notificationSchema = {
   populate: [
-    { path: "user_id", populate: { path: "avatar" } },
-    { path: "model_id" }
+    { path: "receiverId" },
+    { path: "senderId" },
+    { path: "metadata.postId" }
   ]
 };
 

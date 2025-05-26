@@ -1,5 +1,5 @@
-const BlockedUsers = require("../../models/BlockedUsers");
-const HiddenFromUsers = require("../../models/HiddenFromUsers");
+const BlockedUser = require("../../models/BlockedUser");
+const HiddenFromUser = require("../../models/HiddenFromUser");
 const User = require("../../models/User");
 const blockedUserSchema = require("../../schemas/blocked-users-schema");
 const userSchema = require("../../schemas/user-schema");
@@ -8,8 +8,8 @@ const { handlers } = require("../../utilities/handlers/handlers");
 class Service {
   constructor() {
     this.user = User;
-    this.blockedUsers = BlockedUsers;
-    this.hiddenFromUsers = HiddenFromUsers;
+    this.blockedUser = BlockedUser;
+    this.hiddenFromUser = HiddenFromUser;
   }
 
   async toggleNotifications(req, res) {
@@ -135,13 +135,13 @@ class Service {
       const { user: currentUser } = req;
       const { page = 1, limit = 10 } = req.query;
 
-      const filters = { user_id: currentUser._id };
+      const filters = { userId: currentUser._id };
       const sort = { createdAt: -1 };
 
       return pagination({
         res,
         table: "Blocked Users",
-        model: this.blockedUsers,
+        model: this.blockedUser,
         filters,
         page,
         limit,
@@ -159,20 +159,20 @@ class Service {
       const { user: currentUser } = req;
       const { userId } = req.params;
 
-      const isAlreadyBlocked = await BlockedUsers.findOne({
-        user_id: currentUser._id,
-        blocked_user: userId
+      const isAlreadyBlocked = await BlockedUser.findOne({
+        userId: currentUser._id,
+        blockedUser: userId
       });
 
       let message;
 
       if (isAlreadyBlocked) {
-        await BlockedUsers.deleteOne({ _id: isAlreadyBlocked._id });
+        await BlockedUser.deleteOne({ _id: isAlreadyBlocked._id });
         currentUser.totalBlockedUsers =
           (currentUser.totalBlockedUsers || 0) - 1;
         message = "User unblocked successfully.";
       } else {
-        await BlockedUsers.create({
+        await BlockedUser.create({
           user_id: currentUser._id,
           blocked_user: userId
         });
@@ -196,7 +196,7 @@ class Service {
       const { user: currentUser } = req;
       const { userId } = req.params;
 
-      const existingEntry = await this.hiddenFromUsers.findOne({
+      const existingEntry = await this.hiddenFromUser.findOne({
         user_id: currentUser._id,
         hidden_from_user: userId
       });
@@ -204,12 +204,12 @@ class Service {
       let message;
 
       if (existingEntry) {
-        await this.hiddenFromUsers.deleteOne({ _id: existingEntry._id });
+        await this.hiddenFromUser.deleteOne({ _id: existingEntry._id });
         currentUser.totalHiddenFromUsers =
           (currentUser.totalHiddenFromUsers || 0) - 1;
         message = "User removed from hidden list successfully.";
       } else {
-        await this.hiddenFromUsers.create({
+        await this.hiddenFromUser.create({
           user_id: currentUser._id,
           hidden_from_user: userId
         });

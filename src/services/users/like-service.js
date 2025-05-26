@@ -5,16 +5,10 @@ const { handlers } = require("../../utilities/handlers/handlers");
 const Reply = require("../../models/Reply");
 const CommentLikes = require("../../models/CommentLikes");
 const ReplyLikes = require("../../models/ReplyLikes");
-const Event = require("../../models/Event");
-const EventLikes = require("../../models/EventLikes");
-const eventSchema = require("../../schemas/event-schema");
-const { eventLikeSchema } = require("../../schemas/like-schema");
 
 class Service {
   constructor() {
     this.user = User;
-    this.event = Event;
-    this.eventLikes = EventLikes;
     this.comment = Comment;
     this.commentLikes = CommentLikes;
     this.reply = Reply;
@@ -237,117 +231,6 @@ class Service {
       return handlers.response.error({
         res,
         message: "Failed to fetch reply likes"
-      });
-    }
-  }
-
-  async manageEventLikes(req, res) {
-    try {
-      const { event_id } = req.params;
-      const user_id = req.user._id;
-
-      const event = await this.event.findById(event_id);
-      if (!event) {
-        handlers.logger.failed({
-          message: "No event found"
-        });
-        return handlers.response.failed({ res, message: "No event found" });
-      }
-
-      // Check if the user has already liked the event
-      const existingLike = await this.eventLikes.findOne({
-        event_id: event_id,
-        user_id
-      });
-
-      let message = "Unliked";
-
-      if (!existingLike) {
-        // Add like
-        await this.eventLikes.create({ event_id: event_id, user_id });
-        await this.event.updateOne(
-          { _id: event_id },
-          { $inc: { total_likes: 1 } }
-        );
-        message = "Liked";
-      } else {
-        // Remove like
-        await this.eventLikes.deleteOne({ _id: existingLike._id });
-        await this.event.updateOne(
-          { _id: event_id },
-          { $inc: { total_likes: -1 } }
-        );
-      }
-
-      // Get updated total_likes count
-      const updatedEvent = await this.event
-        .findById(event_id)
-        .populate(eventSchema.populate);
-
-      handlers.logger.success({
-        message
-      });
-
-      return handlers.response.success({ res, message });
-    } catch (error) {
-      handlers.logger.error({
-        message: error
-      });
-      return handlers.response.error({
-        res,
-        message: "Failed to manage event likes"
-      });
-    }
-  }
-
-  async getEventLikes(req, res) {
-    try {
-      const { event_id } = req.params;
-      const { page = 1, limit = 10, sort = "-createdAt" } = req.query;
-
-      // Convert page and limit to numbers
-      const pageNumber = parseInt(page);
-      const pageSize = parseInt(limit);
-      const skip = (pageNumber - 1) * pageSize;
-
-      // Count total likes
-      const totalLikes = await this.eventLikes.countDocuments({
-        event_id
-      });
-
-      // Fetch likes with pagination and sorting
-      const replyLikes = await this.eventLikes
-        .find({ event_id })
-        .sort(sort)
-        .skip(skip)
-        .limit(pageSize)
-        .populate(eventLikeSchema.populate);
-
-      // Response data
-      const responseData = {
-        results: replyLikes,
-        total_records: totalLikes,
-        total_pages: Math.ceil(totalLikes / pageSize),
-        current_page: pageNumber,
-        page_size: pageSize
-      };
-
-      handlers.logger.success({
-        message: "Event likes fetched successfully",
-        data: responseData
-      });
-
-      return handlers.response.success({
-        res,
-        message: "Event likes fetched successfully",
-        data: responseData
-      });
-    } catch (error) {
-      handlers.logger.error({ message: error });
-
-      return handlers.response.error({
-        res,
-        message: "Failed to fetch event likes"
       });
     }
   }

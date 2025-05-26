@@ -2,19 +2,19 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    event_id: {
+    blockedUser: {
       type: Schema.Types.ObjectId,
-      ref: "Event",
+      ref: "User",
       trim: true
     }
   },
   { timestamps: true }
 );
 
-const EventArrivedMembers = model("EventArrivedMember", schema);
-module.exports = EventArrivedMembers;
+const BlockedUsers = model("BlockedUser", schema);
+module.exports = BlockedUsers;

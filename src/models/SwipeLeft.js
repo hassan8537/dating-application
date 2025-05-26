@@ -2,12 +2,12 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    hidden_from_user: {
+    passedUser: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
@@ -16,5 +16,5 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-const HiddenFromUsers = model("HiddenFromUsers", schema);
-module.exports = HiddenFromUsers;
+const SwipeLeft = model("SwipeLeft", schema);
+module.exports = SwipeLeft;

@@ -36,6 +36,7 @@ exports.handlers = {
   },
   response: {
     success: ({ res, code = 200, status = 1, message, data = null }) => {
+      console.info({ code, status, message, data });
       return res.status(code).send({
         status,
         message,
@@ -43,6 +44,7 @@ exports.handlers = {
       });
     },
     failed: ({ res, code = 400, status = 0, message, data = null }) => {
+      console.info({ object_type, code, status, message, data });
       return res.status(code).send({
         status,
         message,
@@ -50,6 +52,7 @@ exports.handlers = {
       });
     },
     error: ({ res, code = 500, status = 0, message, data = null }) => {
+      console.info({ code, status, message, data });
       return res.status(code).send({
         status,
         message,
@@ -57,6 +60,7 @@ exports.handlers = {
       });
     },
     unavailable: ({ res, code = 404, status = 0, message, data = null }) => {
+      console.info({ code, status, message, data });
       return res.status(code).send({
         status,
         message,
@@ -64,6 +68,7 @@ exports.handlers = {
       });
     },
     unauthorized: ({ res, code = 403, status = 0, message, data = null }) => {
+      console.info({ code, status, message, data });
       return res.status(code).send({
         status,
         message,

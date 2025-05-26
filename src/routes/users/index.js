@@ -10,9 +10,7 @@ const eventRoutes = require("./event-routes");
 const commentRoutes = require("./comment-routes");
 const replyRoutes = require("./reply-routes");
 const chatRoutes = require("./chat-routes");
-const realTimeRoutes = require("./realtime-routes");
 const likeRoutes = require("./like-routes");
-const shareRoutes = require("./share-routes");
 const socialRoutes = require("./social-routes");
 const reportRoutes = require("./report-routes");
 const blockRoutes = require("./block-routes");
@@ -21,6 +19,7 @@ const subscriptionRoutes = require("./subscription-routes");
 const contentRoutes = require("./content-routes");
 const storyRoutes = require("./story-routes");
 const settingRoutes = require("./setting-routes");
+const matchingRoutes = require("./matching-routes");
 
 // 🔹 Import Middlewares
 const userAuthentication = require("../../middlewares/user-authentication-middleware");
@@ -44,17 +43,16 @@ app.use("/api/v1/profiles", middlewares, profileRoutes);
 app.use("/api/v1/events", middlewares, eventRoutes);
 app.use("/api/v1/comments", middlewares, commentRoutes);
 app.use("/api/v1/replies", middlewares, replyRoutes);
-app.use("/api/v1/realtime", middlewares, realTimeRoutes);
 app.use("/api/v1/chats", middlewares, chatRoutes);
 app.use("/api/v1/likes", middlewares, likeRoutes);
-app.use("/api/v1/shares", middlewares, shareRoutes);
 app.use("/api/v1/social", middlewares, socialRoutes);
 app.use("/api/v1/reports", middlewares, reportRoutes);
 app.use("/api/v1/blocks", middlewares, blockRoutes);
 app.use("/api/v1/toggles", middlewares, toggleRoutes);
 app.use("/api/v1/subscription", middlewares, subscriptionRoutes);
 app.use("/api/v1/stories", middlewares, storyRoutes);
-app.use("/api/v1/settings", middlewares, storyRoutes);
+app.use("/api/v1/settings", middlewares, settingRoutes);
+app.use("/api/v1/profiles", middlewares, matchingRoutes);
 
 app.use("/api/v1/contents", contentRoutes);
 

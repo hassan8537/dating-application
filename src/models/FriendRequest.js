@@ -2,19 +2,23 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    senderId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    event_id: {
+    receiverId: {
       type: Schema.Types.ObjectId,
-      ref: "Event",
+      ref: "User",
       trim: true
+    },
+    status: {
+      type: String,
+      enum: ["pending", "accept", "reject"]
     }
   },
   { timestamps: true }
 );
 
-const EventShares = model("EventShare", schema);
-module.exports = EventShares;
+const FriendRequest = model("FriendRequest", schema);
+module.exports = FriendRequest;

@@ -14,11 +14,11 @@ class Service {
     try {
       const filters = {};
 
-      const { user_id, type, model_id } = req.query;
+      const { receiverId, type, "metadata.postId": postId } = req.query;
 
-      user_id ? (filters.user_id = user_id) : filters;
-      type ? (filters.type = type) : filters;
-      model_id ? (filters.model_id = model_id) : filters;
+      if (receiverId) filters.receiverId = receiverId;
+      if (type) filters.type = type;
+      if (postId) filters["metadata.postId"] = postId;
 
       const { page, limit, sort } = req.query;
 
@@ -38,14 +38,20 @@ class Service {
     }
   }
 
-  async createNotification({ user_id, title, type, model_id, meta_data }) {
+  async createNotification({
+    senderId = null,
+    receiverId,
+    type,
+    message = null,
+    metadata = {}
+  }) {
     try {
       const newNotification = new this.notification({
-        user_id,
-        title,
+        senderId,
+        receiverId,
         type,
-        model_id,
-        meta_data
+        message,
+        metadata
       });
 
       await newNotification.save();
@@ -54,18 +60,20 @@ class Service {
       return newNotification;
     } catch (error) {
       handlers.logger.error({ message: error });
-      return handlers.response.error({ res, message: error.message });
+      return null;
     }
   }
 
   async markAsRead(req, res) {
     try {
-      const { user_id } = req.params;
-      const notifications = await this.notification
-        .find({ user_id })
-        .populate(notificationSchema.populate);
+      const { userId } = req.params;
 
-      if (!notifications) {
+      const notifications = await this.notification.find({
+        receiverId: userId,
+        isRead: false
+      });
+
+      if (!notifications.length) {
         handlers.logger.unavailable({ message: "No unread notifications" });
         return handlers.response.unavailable({
           res,
@@ -73,17 +81,21 @@ class Service {
         });
       }
 
-      notifications.map((n) => (n.is_read = true));
-
-      await notifications.save();
+      await Promise.all(
+        notifications.map((n) => {
+          n.isRead = true;
+          return n.save();
+        })
+      );
 
       handlers.logger.success({
-        message: "Notifications marked read successfully",
+        message: "Notifications marked as read",
         data: notifications
       });
+
       return handlers.response.success({
         res,
-        message: "Notifications marked read successfully",
+        message: "Notifications marked as read",
         data: notifications
       });
     } catch (error) {

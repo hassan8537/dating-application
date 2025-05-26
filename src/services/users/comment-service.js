@@ -4,7 +4,6 @@ const commentSchema = require("../../schemas/comment-schema");
 const { handlers } = require("../../utilities/handlers/handlers");
 const Reply = require("../../models/Reply");
 const CommentLikes = require("../../models/CommentLikes");
-const Event = require("../../models/Event"); // Add Event model for updating total_comments
 
 class Service {
   constructor() {
@@ -12,7 +11,6 @@ class Service {
     this.comment = Comment;
     this.commentLikes = CommentLikes;
     this.reply = Reply;
-    this.event = Event; // Initialize Event model
   }
 
   async getComments(req, res) {
@@ -22,7 +20,6 @@ class Service {
 
       if (query._id) filters._id = query._id;
       if (query.user_id) filters.user_id = query.user_id;
-      if (query.event_id) filters.event_id = query.event_id;
 
       const pageNumber = parseInt(query.page) || 1;
       const pageSize = parseInt(query.limit) || 10;
@@ -108,11 +105,6 @@ class Service {
         files
       });
 
-      // Increase total_comments in the related event
-      await this.event.findByIdAndUpdate(event_id, {
-        $inc: { total_comments: 1 }
-      });
-
       await newComment.populate(commentSchema.populate);
 
       handlers.logger.success({ message: "Comment posted" });
@@ -191,11 +183,6 @@ class Service {
           message: "No comment found"
         });
       }
-
-      // Decrease total_comments in the related event
-      await this.event.findByIdAndUpdate(deletedComment.event_id, {
-        $inc: { total_comments: -1 }
-      });
 
       handlers.logger.success({
         message: "Comment deleted",

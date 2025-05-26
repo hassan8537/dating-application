@@ -1,5 +1,5 @@
 const blockedUserSchema = {
-  populate: [{ path: "user_id blocked_user" }]
+  populate: [{ path: "userId blockedUser" }]
 };
 
 module.exports = blockedUserSchema;
