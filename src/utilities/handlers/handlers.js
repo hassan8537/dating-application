@@ -44,7 +44,7 @@ exports.handlers = {
       });
     },
     failed: ({ res, code = 400, status = 0, message, data = null }) => {
-      console.info({ object_type, code, status, message, data });
+      console.info({ code, status, message, data });
       return res.status(code).send({
         status,
         message,

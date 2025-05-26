@@ -19,15 +19,13 @@ class Controller {
     await this.service.deleteEvent(req, res);
   }
 
+  async getJoinedEvents(req, res) {
+    await this.service.getJoinedEvents(req, res);
+  }
+
   async joinEvent(req, res) {
     await this.service.joinEvent(req, res);
   }
-
-  async inviteMember(req, res) {
-    await this.service.inviteMember(req, res);
-  }
-
-  async getEventComments(req, res) {}
 }
 
 module.exports = new Controller();

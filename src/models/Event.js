@@ -11,11 +11,6 @@ const schema = new Schema(
       type: String,
       trim: true
     },
-    blurHash: {
-      type: String,
-      trim: true,
-      default: ""
-    },
     type: {
       type: String,
       enum: ["public", "private"],
@@ -56,6 +51,10 @@ const schema = new Schema(
       type: Boolean,
       trim: true,
       default: false
+    },
+    totalMembers: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }

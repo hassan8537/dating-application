@@ -3,46 +3,29 @@ const User = require("../../models/User");
 const eventSchema = require("../../schemas/event-schema");
 const userSchema = require("../../schemas/user-schema");
 const { handlers } = require("../../utilities/handlers/handlers");
-const { default: mongoose } = require("mongoose");
 const pagination = require("../../utilities/pagination/pagination");
+const JoinedEvent = require("../../models/JoinedEvent");
+const joinedEventSchema = require("../../schemas/joined-event-schema");
 
 class Service {
   constructor() {
     this.user = User;
     this.event = Event;
+    this.joinedEvent = JoinedEvent;
   }
 
+  // Events
   async getEvents(req, res) {
     try {
-      const { query, user } = req;
+      const { query } = req;
+
       const filters = {};
 
       if (query._id) filters._id = query._id;
-      if (query.user_id) filters.userId = query.user_id;
-
-      if (query.name) {
-        filters.title = { $regex: query.name, $options: "i" };
-      }
-
-      if (query.is_reported) {
-        filters.isReported = query.is_reported === true;
-      }
-
-      if (query.location) {
-        filters["location.name"] = { $regex: query.location, $options: "i" };
-      }
-
-      if (query.nearby_location) {
-        const [lng, lat, maxDistance] = query.nearby_location
-          .split(",")
-          .map(Number);
-        filters.location = {
-          $near: {
-            $geometry: { type: "Point", coordinates: [lng, lat] },
-            $maxDistance: maxDistance
-          }
-        };
-      }
+      if (query.userId) filters.userId = query.userId;
+      if (query.title) filters.title = { $regex: query.title, $options: "i" };
+      if (query.type) filters.type = query.type;
+      if (query.isReported) filters.isReported = query.isReported;
 
       const page = parseInt(query.page) || 1;
       const limit = parseInt(query.limit) || 10;
@@ -51,14 +34,14 @@ class Service {
         res,
         table: "Events",
         model: this.event,
+        filters,
         page,
         limit,
-        sort,
         populate: eventSchema.populate
       });
     } catch (error) {
-      handlers.logger.error({ message: error.message });
-      return handlers.response.error({ res, message: error.message });
+      handlers.logger.error({ message: error });
+      return handlers.response.error({ res, message: error });
     }
   }
 
@@ -80,17 +63,17 @@ class Service {
         data: newEvent
       });
     } catch (error) {
-      return handlers.response.error({ res, message: error.message });
+      return handlers.response.error({ res, message: error });
     }
   }
 
   async updateEvent(req, res) {
     try {
       const { user, params, body } = req;
-      const { event_id } = params;
+      const { eventId } = params;
 
       const existingEvent = await this.event.findOne({
-        _id: event_id,
+        _id: eventId,
         userId: user._id
       });
 
@@ -111,7 +94,95 @@ class Service {
         data: existingEvent
       });
     } catch (error) {
-      return handlers.response.error({ res, message: error.message });
+      return handlers.response.error({ res, message: error });
+    }
+  }
+
+  async deleteEvent(req, res) {
+    try {
+      const { eventId } = req.params;
+
+      const existingEvent = await this.event.findById(eventId);
+
+      if (!existingEvent)
+        return handlers.response.failed({ res, message: "No event found" });
+
+      await this.event.findByIdAndDelete(eventId);
+
+      return handlers.response.success({
+        res,
+        message: "Event deleted successfully"
+      });
+    } catch (error) {
+      return handlers.response.error({ res, message: error });
+    }
+  }
+
+  // Joined Events
+  async getJoinedEvents(req, res) {
+    try {
+      const { query } = req;
+      const filters = {};
+
+      if (query._id) filters._id = query._id;
+      if (query.userId) filters.userId = query.userId;
+      if (query.eventId) filters.eventId = query.eventId;
+
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 10;
+
+      return await pagination({
+        res,
+        table: "Joined events",
+        model: this.joinedEvent,
+        page,
+        limit,
+        filters,
+        populate: joinedEventSchema.populate
+      });
+    } catch (error) {
+      handlers.logger.error({ message: error });
+      return handlers.response.error({ res, message: error });
+    }
+  }
+
+  async joinEvent(req, res) {
+    try {
+      const { user, params } = req;
+
+      const { eventId } = params;
+
+      const existingEvent = await this.event.findById(eventId);
+
+      if (!existingEvent)
+        return handlers.response.failed({ res, message: "No event found" });
+
+      const existingJoinedEvent = await this.joinedEvent.findOne({
+        userId: user._id,
+        eventId: existingEvent._id
+      });
+
+      if (existingJoinedEvent)
+        return handlers.response.failed({
+          res,
+          message: "You already are a member of this event"
+        });
+
+      const newMember = new this.joinedEvent({
+        userId: user._id,
+        eventId: existingEvent._id
+      });
+
+      await newMember.save();
+      await newMember.populate(joinedEventSchema.populate);
+
+      return handlers.response.success({
+        res,
+        message: "Event joined successfully",
+        data: newMember
+      });
+    } catch (error) {
+      return handlers.response.error({ res, message: error });
     }
   }
 }
