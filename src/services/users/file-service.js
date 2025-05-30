@@ -89,19 +89,6 @@ class Service {
             path: file.path
           };
 
-          // If video, generate a thumbnail
-          if (mimetype.startsWith("video/") && file.path) {
-            try {
-              const thumbnailPath = await generateThumbnail(file.path);
-              fileData.thumbnail = thumbnailPath;
-            } catch (err) {
-              handlers.logger.error({
-                message: `Failed to generate thumbnail for ${file.originalname}`,
-                error: err
-              });
-            }
-          }
-
           filesToSave.push(fileData);
         }
       }

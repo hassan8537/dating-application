@@ -2,12 +2,12 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    hidden_from_user: {
+    hiddenFromUser: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true

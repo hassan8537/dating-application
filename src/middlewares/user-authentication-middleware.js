@@ -9,6 +9,8 @@ const userAuthentication = async (req, res, next) => {
     const bearerToken =
       req.headers["authorization"] || req.cookies.authorization;
 
+    console.log({ bearerToken });
+
     if (!bearerToken) {
       return handlers.response.failed({
         res,

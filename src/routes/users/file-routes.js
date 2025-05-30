@@ -7,12 +7,7 @@ router.get("/", controller.getFiles.bind(controller));
 
 router.post(
   "/",
-  upload.fields([
-    { name: "videos" },
-    { name: "images" },
-    { name: "audios" },
-    { name: "docs" }
-  ]),
+  upload.array([{ name: "files" }]),
   controller.createFile.bind(controller)
 );
 
