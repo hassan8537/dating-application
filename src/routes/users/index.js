@@ -20,6 +20,7 @@ const contentRoutes = require("./content-routes");
 const storyRoutes = require("./story-routes");
 const settingRoutes = require("./setting-routes");
 const matchingRoutes = require("./matching-routes");
+const complimentRoutes = require("./compliment-routes");
 
 // 🔹 Import Middlewares
 const userAuthentication = require("../../middlewares/user-authentication-middleware");
@@ -53,6 +54,7 @@ app.use("/api/v1/subscription", middlewares, subscriptionRoutes);
 app.use("/api/v1/stories", middlewares, storyRoutes);
 app.use("/api/v1/settings", middlewares, settingRoutes);
 app.use("/api/v1/profiles", middlewares, matchingRoutes);
+app.use("/api/v1/compliments", middlewares, complimentRoutes);
 
 app.use("/api/v1/contents", contentRoutes);
 

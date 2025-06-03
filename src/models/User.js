@@ -127,7 +127,9 @@ const userSchema = new Schema(
 
     totalPendingFriendRequests: { type: Number, default: 0 },
     totalAcceptedFriendRequests: { type: Number, default: 0 },
-    totalRejectedFriendRequests: { type: Number, default: 0 }
+    totalRejectedFriendRequests: { type: Number, default: 0 },
+
+    totalCompliments: { type: Number, default: 0 }
   },
   { timestamps: true }
 );
