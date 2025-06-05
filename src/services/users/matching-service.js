@@ -30,6 +30,11 @@ class Service {
         });
       }
 
+      const { page = 1, limit = 10 } = req.query;
+      const pageNumber = parseInt(page, 10);
+      const pageSize = parseInt(limit, 10);
+      const skip = (pageNumber - 1) * pageSize;
+
       const users = await this.user.find({
         _id: { $ne: currentUser._id },
         isActive: true,
@@ -40,23 +45,34 @@ class Service {
         const score = calculateMatchScore(currentUser, target);
         return {
           user: target,
-          matchScore: `${score.toFixed(2)}%`
+          matchScore: parseFloat(score.toFixed(2))
         };
       });
 
-      matches.sort(
-        (a, b) => parseFloat(b.matchScore) - parseFloat(a.matchScore)
-      );
+      matches.sort((a, b) => b.matchScore - a.matchScore);
+
+      const paginatedMatches = matches.slice(skip, skip + pageSize);
+
+      const responseData = {
+        results: paginatedMatches.map((m) => ({
+          ...m,
+          matchScore: `${m.matchScore}%`
+        })),
+        totalRecords: matches.length,
+        totalPages: Math.ceil(matches.length / pageSize),
+        currentPage: pageNumber,
+        pageSize: pageSize
+      };
 
       handlers.logger.success({
         message: "Matching profiles fetched",
-        data: matches
+        data: responseData
       });
 
       return handlers.response.success({
         res,
         message: "Matching profiles fetched",
-        data: matches
+        data: responseData
       });
     } catch (error) {
       handlers.logger.error({ message: error });
