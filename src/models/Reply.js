@@ -2,17 +2,17 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    user_id: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true
     },
-    event_id: {
+    reelId: {
       type: Schema.Types.ObjectId,
-      ref: "Event",
+      ref: "Reel",
       trim: true
     },
-    comment_id: {
+    commentId: {
       type: Schema.Types.ObjectId,
       ref: "Comment",
       trim: true
@@ -22,19 +22,7 @@ const schema = new Schema(
       trim: true,
       default: ""
     },
-    emoji: {
-      type: String,
-      trim: true,
-      default: ""
-    },
-    files: [
-      {
-        type: Schema.Types.ObjectId,
-        trim: true,
-        ref: "File"
-      }
-    ],
-    total_likes: {
+    totalLikes: {
       type: Number,
       default: 0
     }

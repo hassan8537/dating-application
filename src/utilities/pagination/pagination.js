@@ -52,12 +52,12 @@ const pagination = async ({
 
     if (!data.length) {
       handlers.logger.unavailable({
-        message: `No ${table.toLowerCase()} found.`
+        message: `No ${table.toLowerCase()} yet.`
       });
 
-      return handlers.response.unavailable({
+      return handlers.response.success({
         res,
-        message: `No ${table.toLowerCase()} found.`
+        message: `No ${table.toLowerCase()} yet.`
       });
     }
 

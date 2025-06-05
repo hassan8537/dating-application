@@ -2,6 +2,11 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
     video: {
       type: String,
       default: null
@@ -14,7 +19,11 @@ const schema = new Schema(
       type: String,
       enum: ["public", "private"],
       default: "public"
-    }
+    },
+    totalSaves: { type: Number, default: 0 },
+    totalLikes: { type: Number, default: 0 },
+    totalShares: { type: Number, default: 0 },
+    totalComments: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

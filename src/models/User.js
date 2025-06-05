@@ -129,7 +129,11 @@ const userSchema = new Schema(
     totalAcceptedFriendRequests: { type: Number, default: 0 },
     totalRejectedFriendRequests: { type: Number, default: 0 },
 
-    totalCompliments: { type: Number, default: 0 }
+    totalCompliments: { type: Number, default: 0 },
+
+    totalReels: { type: Number, default: 0 },
+    totalSavedReels: { type: Number, default: 0 },
+    totalLikedReels: { type: Number, default: 0 }
   },
   { timestamps: true }
 );
