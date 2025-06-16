@@ -133,7 +133,9 @@ const userSchema = new Schema(
 
     totalReels: { type: Number, default: 0 },
     totalSavedReels: { type: Number, default: 0 },
-    totalLikedReels: { type: Number, default: 0 }
+    totalLikedReels: { type: Number, default: 0 },
+
+    totalEvents: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

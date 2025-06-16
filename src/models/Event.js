@@ -52,6 +52,10 @@ const schema = new Schema(
       trim: true,
       default: false
     },
+    totalInvites: {
+      type: Number,
+      default: 0
+    },
     totalMembers: {
       type: Number,
       default: 0

@@ -15,7 +15,9 @@ const schema = new Schema(
         "match",
         "friend-request",
         "super-like",
-        "custom"
+        "custom",
+        "invitation",
+        "new-member"
       ],
       required: true
     },

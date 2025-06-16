@@ -1,31 +1,36 @@
+// Cleaned and Updated Event Service
+
 const Event = require("../../models/Event");
 const User = require("../../models/User");
+const EventMember = require("../../models/EventMembers");
+const EventInvites = require("../../models/EventInvites");
+const Notification = require("../../models/Notification");
+
 const eventSchema = require("../../schemas/event-schema");
-const userSchema = require("../../schemas/user-schema");
+const eventMemberSchema = require("../../schemas/event-member-schema");
+const eventInviteSchema = require("../../schemas/event-invite-schema");
 const { handlers } = require("../../utilities/handlers/handlers");
 const pagination = require("../../utilities/pagination/pagination");
-const JoinedEvent = require("../../models/JoinedEvent");
-const joinedEventSchema = require("../../schemas/joined-event-schema");
 
-class Service {
+class EventService {
   constructor() {
     this.user = User;
     this.event = Event;
-    this.joinedEvent = JoinedEvent;
+    this.eventMember = EventMember;
+    this.eventInvite = EventInvites;
+    this.notification = Notification;
   }
 
-  // Events
   async getEvents(req, res) {
     try {
       const { query } = req;
-
       const filters = {};
 
       if (query._id) filters._id = query._id;
       if (query.userId) filters.userId = query.userId;
       if (query.title) filters.title = { $regex: query.title, $options: "i" };
       if (query.type) filters.type = query.type;
-      if (query.isReported) filters.isReported = query.isReported;
+      if (query.isReported !== undefined) filters.isReported = query.isReported;
 
       const page = parseInt(query.page) || 1;
       const limit = parseInt(query.limit) || 10;
@@ -40,7 +45,6 @@ class Service {
         populate: eventSchema.populate
       });
     } catch (error) {
-      handlers.logger.error({ message: error });
       return handlers.response.error({ res, message: error });
     }
   }
@@ -48,13 +52,12 @@ class Service {
   async createEvent(req, res) {
     try {
       const { user, body } = req;
-
       const newEvent = new this.event({ userId: user._id, ...body });
       await newEvent.save();
       await newEvent.populate(eventSchema.populate);
 
       await this.user.findByIdAndUpdate(user._id, {
-        $inc: { total_events: 1 }
+        $inc: { totalEvents: 1 }
       });
 
       return handlers.response.success({
@@ -76,13 +79,11 @@ class Service {
         _id: eventId,
         userId: user._id
       });
-
-      if (!existingEvent) {
+      if (!existingEvent)
         return handlers.response.unavailable({
           res,
           message: "No event found"
         });
-      }
 
       Object.assign(existingEvent, body);
       await existingEvent.save();
@@ -101,13 +102,15 @@ class Service {
   async deleteEvent(req, res) {
     try {
       const { eventId } = req.params;
-
+      const user = req.user;
       const existingEvent = await this.event.findById(eventId);
-
       if (!existingEvent)
         return handlers.response.failed({ res, message: "No event found" });
 
       await this.event.findByIdAndDelete(eventId);
+
+      user.totalEvents - +1;
+      await user.save();
 
       return handlers.response.success({
         res,
@@ -118,15 +121,140 @@ class Service {
     }
   }
 
-  // Joined Events
+  async joinEvent(req, res) {
+    try {
+      const { user, params } = req;
+      const { firstName, lastName } = user;
+      const { eventId } = params;
+
+      const event = await this.event.findById(eventId);
+      if (!event)
+        return handlers.response.failed({ res, message: "No event found" });
+
+      // Prevent user from joining their own event
+      if (event.userId.toString() === user._id.toString()) {
+        return handlers.response.failed({
+          res,
+          message: "You cannot join your own event"
+        });
+      }
+
+      const alreadyJoined = await this.eventMember.findOne({
+        eventId,
+        memberId: user._id
+      });
+      if (alreadyJoined)
+        return handlers.response.failed({ res, message: "Already joined" });
+
+      const newMember = await this.eventMember.create({
+        eventId,
+        memberId: user._id
+      });
+      await newMember.populate(eventMemberSchema.populate);
+
+      await this.event.findByIdAndUpdate(eventId, {
+        $inc: { totalMembers: 1 }
+      });
+
+      await this.notification.create({
+        senderId: user._id,
+        receiverId: event.userId,
+        type: "new-member",
+        message: `${firstName} ${lastName} joined your event: ${event.title}`,
+        metadata: event
+      });
+
+      return handlers.response.success({
+        res,
+        message: "Joined event successfully",
+        data: newMember
+      });
+    } catch (error) {
+      return handlers.response.error({ res, message: error });
+    }
+  }
+
+  async sendEventInvitation(req, res) {
+    try {
+      const { eventId, receiverId } = req.body;
+      const { _id: senderId, firstName, lastName } = req.user;
+
+      const [event, receiver] = await Promise.all([
+        this.event.findById(eventId),
+        this.user.findById(receiverId)
+      ]);
+
+      if (!event || !receiver)
+        return handlers.response.failed({
+          res,
+          message: "Invalid event or receiver ID"
+        });
+
+      const existing = await this.eventInvite.findOne({ eventId, receiverId });
+
+      if (existing) {
+        if (existing.status === "pending")
+          return handlers.response.failed({ res, message: "Already invited" });
+        if (existing.status === "accepted")
+          return handlers.response.failed({ res, message: "Already a member" });
+      }
+
+      const newInvite = await this.eventInvite.create({
+        eventId,
+        senderId,
+        receiverId
+      });
+
+      await this.notification.create({
+        senderId,
+        receiverId,
+        type: "invitation",
+        message: `${firstName} ${lastName} invited you to: ${event.title}`,
+        metadata: event
+      });
+
+      await this.event.findByIdAndUpdate(eventId, {
+        $inc: { totalInvites: 1 }
+      });
+
+      return handlers.response.success({
+        res,
+        message: "Invitation sent",
+        data: newInvite
+      });
+    } catch (error) {
+      return handlers.response.error({ res, message: error });
+    }
+  }
+
+  async getEventInvitedUsers(req, res) {
+    try {
+      const { eventId } = req.params;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      return await pagination({
+        res,
+        table: "Event invites",
+        model: this.eventInvite,
+        filters: { eventId, senderId: req.user._id },
+        page,
+        limit,
+        populate: eventInviteSchema.populate
+      });
+    } catch (error) {
+      return handlers.response.error({ res, message: error });
+    }
+  }
+
   async getJoinedEvents(req, res) {
     try {
       const { query } = req;
       const filters = {};
 
       if (query._id) filters._id = query._id;
-      if (query.userId) filters.userId = query.userId;
       if (query.eventId) filters.eventId = query.eventId;
+      if (query.memberId) filters.memberId = query.memberId;
 
       const page = parseInt(query.page) || 1;
       const limit = parseInt(query.limit) || 10;
@@ -134,52 +262,11 @@ class Service {
       return await pagination({
         res,
         table: "Joined events",
-        model: this.joinedEvent,
+        model: this.eventMember,
+        filters,
         page,
         limit,
-        filters,
-        populate: joinedEventSchema.populate
-      });
-    } catch (error) {
-      handlers.logger.error({ message: error });
-      return handlers.response.error({ res, message: error });
-    }
-  }
-
-  async joinEvent(req, res) {
-    try {
-      const { user, params } = req;
-
-      const { eventId } = params;
-
-      const existingEvent = await this.event.findById(eventId);
-
-      if (!existingEvent)
-        return handlers.response.failed({ res, message: "No event found" });
-
-      const existingJoinedEvent = await this.joinedEvent.findOne({
-        userId: user._id,
-        eventId: existingEvent._id
-      });
-
-      if (existingJoinedEvent)
-        return handlers.response.failed({
-          res,
-          message: "You already are a member of this event"
-        });
-
-      const newMember = new this.joinedEvent({
-        userId: user._id,
-        eventId: existingEvent._id
-      });
-
-      await newMember.save();
-      await newMember.populate(joinedEventSchema.populate);
-
-      return handlers.response.success({
-        res,
-        message: "Event joined successfully",
-        data: newMember
+        populate: eventMemberSchema.populate
       });
     } catch (error) {
       return handlers.response.error({ res, message: error });
@@ -187,4 +274,4 @@ class Service {
   }
 }
 
-module.exports = new Service();
+module.exports = new EventService();

@@ -26,6 +26,14 @@ class Controller {
   async joinEvent(req, res) {
     await this.service.joinEvent(req, res);
   }
+
+  async sendEventInvitation(req, res) {
+    await this.service.sendEventInvitation(req, res);
+  }
+
+  async getEventInvitedUsers(req, res) {
+    await this.service.getEventInvitedUsers(req, res);
+  }
 }
 
 module.exports = new Controller();

@@ -683,7 +683,6 @@ class Service {
     }
   }
 
-  // sign out
   async signOut(req, res) {
     try {
       req.session.destroy((err) => {
@@ -711,39 +710,6 @@ class Service {
       return handlers.response.error({ res, message: error.message });
     }
   }
-
-  // Others
-  // async getProfiles(req, res) {
-  //   try {
-  //     const { query } = req;
-
-  //     let filters = { role: "user" };
-
-  //     ["_id"].forEach((key) => {
-  //       if (query[key]) filters[key] = query[key];
-  //     });
-
-  //     // Extract pagination and sorting options with defaults
-  //     const page = parseInt(query.page) || 1;
-  //     const limit = parseInt(query.limit) || 10;
-  //     const sort = query.sort || "-createdAt";
-
-  //     // Call the pagination utility
-  //     await pagination({
-  //       res,
-  //       table: "Users",
-  //       model: this.user,
-  //       filters,
-  //       page,
-  //       limit,
-  //       sort,
-  //       populate: userSchema.populate
-  //     });
-  //   } catch (error) {
-  //     handlers.logger.error({ message: error });
-  //     return handlers.response.error({ res, message: error.message });
-  //   }
-  // }
 }
 
 module.exports = new Service();

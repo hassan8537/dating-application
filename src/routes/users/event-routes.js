@@ -11,6 +11,16 @@ router.put("/:eventId", controller.updateEvent.bind(controller));
 
 router.delete("/:eventId", controller.deleteEvent.bind(controller));
 
-router.get("/join/:eventId", controller.joinEvent.bind(controller));
+router.post("/:eventId/join", controller.joinEvent.bind(controller));
+
+router.post(
+  "/:eventId/invitations",
+  controller.sendEventInvitation.bind(controller)
+);
+
+router.get(
+  "/:eventId/invites",
+  controller.getEventInvitedUsers.bind(controller)
+);
 
 module.exports = router;
