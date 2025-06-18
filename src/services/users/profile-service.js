@@ -743,7 +743,7 @@ class Service {
 
       return handlers.response.success({ res, message: "Success" });
     } catch (error) {
-      return handlers.response.error({ res, message: error.message });
+      return handlers.response.error({ res, message: error });
     }
   }
 }

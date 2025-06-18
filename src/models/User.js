@@ -101,8 +101,8 @@ const userSchema = new Schema(
     },
     gallery: [
       {
-        type: { type: String, enum: ["image", "video"], required: true },
-        url: { type: String, required: true, trim: true },
+        type: { type: String, enum: ["image", "video"] },
+        url: { type: String, trim: true },
         thumbnail: { type: String, trim: true, default: null }
       }
     ],

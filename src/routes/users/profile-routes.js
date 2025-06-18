@@ -4,6 +4,8 @@ const controller = require("../../controllers/users/profile-controller");
 
 router.get("/myself", controller.getMyProfile.bind(controller));
 
+router.post("/visits", controller.visitProfile.bind(controller));
+
 router.post("/", controller.createProfile.bind(controller));
 
 router.post("/create-avatar", controller.createAvatar.bind(controller));
@@ -36,7 +38,5 @@ router.post("/", controller.deleteAccount.bind(controller));
 router.put("/change-password", controller.changePassword.bind(controller));
 
 router.get("/signout", controller.signOut.bind(controller));
-
-router.post("/visits", controller.visitProfile.bind(controller));
 
 module.exports = router;
