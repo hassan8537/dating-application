@@ -70,6 +70,10 @@ class Controller {
   async signOut(req, res) {
     await this.service.signOut(req, res);
   }
+
+  async visitProfile(req, res) {
+    await this.service.visitProfile(req, res);
+  }
 }
 
 module.exports = new Controller();

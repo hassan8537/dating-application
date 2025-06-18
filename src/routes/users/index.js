@@ -10,7 +10,6 @@ const eventRoutes = require("./event-routes");
 const commentRoutes = require("./comment-routes");
 const replyRoutes = require("./reply-routes");
 const chatRoutes = require("./chat-routes");
-const likeRoutes = require("./like-routes");
 const socialRoutes = require("./social-routes");
 const reportRoutes = require("./report-routes");
 const blockRoutes = require("./block-routes");
@@ -22,6 +21,7 @@ const settingRoutes = require("./setting-routes");
 const matchingRoutes = require("./matching-routes");
 const complimentRoutes = require("./compliment-routes");
 const reelRoutes = require("./reel-routes");
+const exploreRoutes = require("./explore-routes");
 
 // 🔹 Import Middlewares
 const userAuthentication = require("../../middlewares/user-authentication-middleware");
@@ -46,7 +46,6 @@ app.use("/api/v1/events", middlewares, eventRoutes);
 app.use("/api/v1/comments", middlewares, commentRoutes);
 app.use("/api/v1/replies", middlewares, replyRoutes);
 app.use("/api/v1/chats", middlewares, chatRoutes);
-app.use("/api/v1/likes", middlewares, likeRoutes);
 app.use("/api/v1/social", middlewares, socialRoutes);
 app.use("/api/v1/reports", middlewares, reportRoutes);
 app.use("/api/v1/blocks", middlewares, blockRoutes);
@@ -57,6 +56,7 @@ app.use("/api/v1/settings", middlewares, settingRoutes);
 app.use("/api/v1/profiles", middlewares, matchingRoutes);
 app.use("/api/v1/compliments", middlewares, complimentRoutes);
 app.use("/api/v1/reels", middlewares, reelRoutes);
+app.use("/api/v1/explores", middlewares, exploreRoutes);
 
 app.use("/api/v1/contents", contentRoutes);
 

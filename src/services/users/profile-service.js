@@ -5,6 +5,7 @@ const File = require("../../models/File");
 const Otp = require("../../models/Otp");
 const Reply = require("../../models/Reply");
 const User = require("../../models/User");
+const VisitedUser = require("../../models/VisitedUser");
 const userSchema = require("../../schemas/user-schema");
 const { timeToISODate } = require("../../utilities/formatters/iso-formatters");
 const { handlers } = require("../../utilities/handlers/handlers");
@@ -20,6 +21,7 @@ class Service {
     this.otp = Otp;
     this.reply = Reply;
     this.user = User;
+    this.visitedUser = VisitedUser;
   }
 
   async getMyProfile(req, res) {
@@ -707,6 +709,40 @@ class Service {
       });
     } catch (error) {
       handlers.logger.error({ message: error });
+      return handlers.response.error({ res, message: error.message });
+    }
+  }
+
+  async visitProfile(req, res) {
+    try {
+      const user = req.user;
+      const { visitedUserId } = req.body;
+
+      const userToVisit = await this.user.findById(visitedUserId);
+      if (!userToVisit) {
+        return handlers.response.failed({
+          res,
+          message: "Invalid visited user ID"
+        });
+      }
+
+      const alreadyVisited = await this.visitedUser.findOne({
+        userId: user._id,
+        visitedUser: visitedUserId
+      });
+
+      if (!alreadyVisited) {
+        await this.visitedUser.create({
+          userId: user._id,
+          visitedUser: userToVisit._id
+        });
+      }
+
+      userToVisit.totalProfilesVisitedMe++;
+      await userToVisit.save();
+
+      return handlers.response.success({ res, message: "Success" });
+    } catch (error) {
       return handlers.response.error({ res, message: error.message });
     }
   }
