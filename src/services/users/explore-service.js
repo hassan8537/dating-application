@@ -21,113 +21,64 @@ class Service {
     this.likedUser = SwipeRight;
   }
 
-  async profilesLikedMe(req, res) {
+  async getProfiles(req, res) {
     try {
       const user = req.user;
+      const { type, page, limit } = req.query;
 
-      const { page, limit } = req.query;
+      const config = {
+        likedYou: {
+          model: this.likedUser,
+          filters: { likedUser: user._id },
+          schema: likedUserSchema,
+          table: "Profiles liked me"
+        },
+        visitedYou: {
+          model: this.visitedUser,
+          filters: { visitedUser: user._id },
+          schema: visitedUserSchema,
+          table: "Profiles visited me"
+        },
+        favourited: {
+          model: this.favouriteUser,
+          filters: { userId: user._id },
+          schema: favouriteUserSchema,
+          table: "Favourited profiles"
+        },
+        passed: {
+          model: this.passedUser,
+          filters: { userId: user._id },
+          schema: passedUserSchema,
+          table: "Passed profiles"
+        },
+        liked: {
+          model: this.likedUser,
+          filters: { userId: user._id },
+          schema: likedUserSchema,
+          table: "Liked profiles"
+        }
+      };
 
-      const filters = { likedUser: user._id };
+      const selected = config[type];
 
-      return await pagination({
-        res: res,
-        table: "Profiles liked me",
-        model: this.likedUser,
-        filters: filters,
-        page: page,
-        limit: limit,
-        populate: likedUserSchema.populate
-      });
-    } catch (error) {
-      return handlers.response.error({ res, message: error });
-    }
-  }
-
-  async profilesVisitedMe(req, res) {
-    try {
-      const user = req.user;
-
-      const { page, limit } = req.query;
-
-      const filters = { visitedUser: user._id };
-
-      return await pagination({
-        res: res,
-        table: "Profile visited me",
-        model: this.visitedUser,
-        filters: filters,
-        page: page,
-        limit: limit,
-        populate: visitedUserSchema.populate
-      });
-    } catch (error) {
-      return handlers.response.error({ res, message: error });
-    }
-  }
-
-  async favouriteProfiles(req, res) {
-    try {
-      const user = req.user;
-
-      const { page, limit } = req.query;
-
-      const filters = { userId: user._id };
+      if (!selected) {
+        return handlers.response.failed({
+          res,
+          message: "Invalid type provided"
+        });
+      }
 
       return await pagination({
-        res: res,
-        table: "Favourite profiles",
-        model: this.favouriteUser,
-        filters: filters,
-        page: page,
-        limit: limit,
-        populate: favouriteUserSchema.populate
+        res,
+        table: selected.table,
+        model: selected.model,
+        filters: selected.filters,
+        page,
+        limit,
+        populate: selected.schema.populate
       });
     } catch (error) {
-      return handlers.response.error({ res, message: error });
-    }
-  }
-
-  async profilesIPassed(req, res) {
-    try {
-      const user = req.user;
-
-      const { page, limit } = req.query;
-
-      const filters = { userId: user._id };
-
-      return await pagination({
-        res: res,
-        table: "Passed profiles",
-        model: this.passedUser,
-        filters: filters,
-        page: page,
-        limit: limit,
-        populate: passedUserSchema.populate
-      });
-    } catch (error) {
-      return handlers.response.error({ res, message: error });
-    }
-  }
-
-  async profilesILiked(req, res) {
-    try {
-      const user = req.user;
-
-      const { page, limit } = req.query;
-
-      const filters = { userId: user._id };
-
-      return await pagination({
-        res: res,
-        table: "Liked profiles",
-        model: this.likedUser,
-        filters: filters,
-        page: page,
-        limit: limit,
-        populate: likedUserSchema.populate
-      });
-    } catch (error) {
-      return handlers.response.error({ res, message: error });
+      return handlers.response.error({ res, message: error.message });
     }
   }
 }
