@@ -37,6 +37,6 @@ router.put("/change-password", controller.changePassword.bind(controller));
 
 router.get("/signout", controller.signOut.bind(controller));
 
-router.post("/visit", controller.visitProfile.bind(controller));
+router.post("/visits", controller.visitProfile.bind(controller));
 
 module.exports = router;
