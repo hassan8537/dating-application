@@ -2,13 +2,13 @@ const { Schema, model } = require("mongoose");
 
 const schema = new Schema(
   {
-    sender_id: {
+    senderId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true,
       default: ""
     },
-    receiver_id: {
+    receiverId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       trim: true,
@@ -18,6 +18,18 @@ const schema = new Schema(
       type: String,
       trim: true,
       default: ""
+    },
+    files: [
+      {
+        type: String,
+        trim: true,
+        default: ""
+      }
+    ],
+    status: {
+      type: String,
+      enum: ["read", "unread"],
+      default: "unread"
     }
   },
   { timestamps: true }

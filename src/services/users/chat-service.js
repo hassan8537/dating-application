@@ -9,42 +9,45 @@ class Service {
     this.user = User;
   }
 
-  async getInbox(req, res) {
+  async getInbox(data) {
     try {
-      const { user_id } = req.query;
+      const { userId, page = 1, limit = 10 } = data;
 
-      const user = await this.user.findById(user_id);
+      const user = await this.user.findById(userId);
       if (!user) {
         handlers.logger.unavailable({ message: "User not found" });
-        return handlers.response.unavailable({
-          res,
+        return handlers.event.unavailable({
+          object_type: "inbox",
           message: "User not found"
         });
       }
 
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+
       const inbox = await this.chat.aggregate([
         {
           $match: {
-            $or: [{ sender_id: user._id }, { receiver_id: user._id }]
+            $or: [{ senderId: user._id }, { receiverId: user._id }]
           }
         },
-        {
-          $sort: { createdAt: -1 }
-        },
+        { $sort: { createdAt: -1 } },
         {
           $group: {
             _id: {
-              sender: "$sender_id",
-              receiver: "$receiver_id"
+              sender: "$senderId",
+              receiver: "$receiverId"
             },
             latestMessage: { $first: "$$ROOT" }
           }
         },
+        { $sort: { "latestMessage.createdAt": -1 } },
+        { $skip: skip },
+        { $limit: parseInt(limit) },
         {
           $project: {
             _id: "$latestMessage._id",
-            sender_id: "$latestMessage.sender_id",
-            receiver_id: "$latestMessage.receiver_id",
+            senderId: "$latestMessage.senderId",
+            receiverId: "$latestMessage.receiverId",
             text: "$latestMessage.text",
             createdAt: "$latestMessage.createdAt"
           }
@@ -52,49 +55,77 @@ class Service {
         {
           $lookup: {
             from: "users",
-            localField: "sender_id",
+            localField: "senderId",
             foreignField: "_id",
-            as: "sender_id"
+            as: "sender"
           }
         },
         {
           $lookup: {
             from: "users",
-            localField: "receiver_id",
+            localField: "receiverId",
             foreignField: "_id",
-            as: "receiver_id"
+            as: "receiver"
           }
         },
-        {
-          $unwind: "$sender_id"
-        },
-        {
-          $unwind: "$receiver_id"
-        }
+        { $unwind: "$sender" },
+        { $unwind: "$receiver" }
       ]);
+
+      // Add unread count for each thread
+      const inboxWithUnread = await Promise.all(
+        inbox.map(async (chat) => {
+          const otherUserId =
+            String(chat.senderId._id) === String(user._id)
+              ? chat.receiverId._id
+              : chat.senderId._id;
+
+          const unreadCount = await this.chat.countDocuments({
+            senderId: otherUserId,
+            receiverId: user._id,
+            status: "unread"
+          });
+
+          return {
+            ...chat,
+            unreadCount
+          };
+        })
+      );
 
       handlers.logger.success({
         message: "Inbox retrieved successfully",
-        data: inbox
+        data: inboxWithUnread
       });
-      return handlers.response.success({
-        res,
+
+      return handlers.event.success({
+        object_type: "inbox",
         message: "Inbox retrieved successfully",
-        data: inbox
+        data: {
+          results: inboxWithUnread,
+          pagination: {
+            currentPage: parseInt(page),
+            pageSize: parseInt(limit),
+            count: inboxWithUnread.length
+          }
+        }
       });
     } catch (error) {
       handlers.logger.error({ message: error });
-      return handlers.response.error({ res, message: error.message });
+      return handlers.event.error({
+        object_type: "inbox",
+        message: error.message
+      });
     }
   }
 
   async newChat(data) {
     try {
-      const { sender_id, receiver_id, text } = data;
+      const { senderId, receiverId, text, files } = data;
 
       const [sender, receiver] = await Promise.all([
-        this.user.findById(sender_id),
-        this.user.findById(receiver_id)
+        this.user.findById(senderId),
+        this.user.findById(receiverId)
       ]);
 
       if (!sender) {
@@ -113,11 +144,11 @@ class Service {
         });
       }
 
-      // Create new chat message
       const newChat = new this.chat({
-        sender_id: sender._id,
-        receiver_id: receiver._id,
-        text
+        senderId: sender._id,
+        receiverId: receiver._id,
+        text: text,
+        files: files
       });
 
       await newChat.save();
@@ -135,7 +166,6 @@ class Service {
       });
     } catch (error) {
       handlers.logger.error({ message: error });
-
       return handlers.event.error({
         object_type: "new-chat",
         message: error.message
@@ -143,53 +173,123 @@ class Service {
     }
   }
 
-  async getChats(data) {
+  async getChats(req, res) {
     try {
-      const { sender_id, receiver_id } = data;
+      const { senderId, receiverId, page = 1, limit = 10 } = req.query;
 
       const [sender, receiver] = await Promise.all([
-        await this.user.findById(sender_id),
-        await this.user.findById(receiver_id)
+        this.user.findById(senderId),
+        this.user.findById(receiverId)
       ]);
 
       if (!sender) {
         handlers.logger.unavailable({ message: "No sender found" });
-        return handlers.event.unavailable({
-          object_type: "chats",
+        return handlers.response.unavailable({
+          res,
           message: "No sender found"
         });
       }
 
       if (!receiver) {
         handlers.logger.unavailable({ message: "No receiver found" });
-        return handlers.event.unavailable({
-          object_type: "chats",
+        return handlers.response.unavailable({
+          res,
           message: "No receiver found"
         });
       }
 
+      // Update unread messages sent by receiver to read
+      await this.chat.updateMany(
+        {
+          senderId: receiver._id,
+          receiverId: sender._id,
+          status: "unread"
+        },
+        { $set: { status: "read" } }
+      );
+
+      // Manual pagination values
+      const pageNumber = parseInt(page) || 1;
+      const pageSize = parseInt(limit) || 10;
+      const skip = (pageNumber - 1) * pageSize;
+
+      // Total count
+      const totalChats = await this.chat.countDocuments({
+        $or: [
+          { senderId: sender._id, receiverId: receiver._id },
+          { senderId: receiver._id, receiverId: sender._id }
+        ]
+      });
+
+      // Fetch paginated chats
       const chats = await this.chat
         .find({
           $or: [
-            { sender_id: sender._id, receiver_id: receiver._id },
-            { sender_id: receiver._id, receiver_id: sender._id }
+            { senderId: sender._id, receiverId: receiver._id },
+            { senderId: receiver._id, receiverId: sender._id }
           ]
         })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize)
         .populate(chatSchema.populate);
+
+      const responseData = {
+        results: chats,
+        totalRecords: totalChats,
+        totalPages: Math.ceil(totalChats / pageSize),
+        currentPage: pageNumber,
+        pageSize
+      };
 
       handlers.logger.success({
         message: "Chats retrieved successfully",
-        data: chats
+        data: responseData
       });
+
       return handlers.event.success({
         object_type: "chats",
         message: "Chats retrieved successfully",
-        data: chats
+        data: responseData
       });
     } catch (error) {
       handlers.logger.error({ message: error });
       return handlers.event.error({
         object_type: "chats",
+        message: error.message
+      });
+    }
+  }
+
+  async chatTyping(data) {
+    try {
+      const { senderId, receiverId, isTyping = true } = data;
+
+      const [sender, receiver] = await Promise.all([
+        this.user.findById(senderId),
+        this.user.findById(receiverId)
+      ]);
+
+      if (!sender || !receiver) {
+        return handlers.event.unavailable({
+          object_type: "chat-typing",
+          message: "Invalid sender or receiver"
+        });
+      }
+
+      return handlers.event.success({
+        object_type: "chat-typing",
+        message: "Typing status updated",
+        data: {
+          senderId,
+          receiverId,
+          isTyping
+        }
+      });
+    } catch (error) {
+      handlers.logger.error({ message: error });
+      return handlers.event.error({
+        object_type: "chat-typing",
         message: error.message
       });
     }

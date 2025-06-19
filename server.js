@@ -84,15 +84,38 @@ io.on("connection", async (socket) => {
 
   const chatController = require("./src/controllers/users/chat-controller");
 
-  socket.on("new-chat", async ({ senderId, receiverId, text }) => {
+  socket.on("get-inbox", async ({ userId, page, limit }) => {
+    try {
+      const inbox = await chatController.getInbox({
+        userId,
+        page,
+        limit
+      });
+
+      return socket.emit("response", inbox);
+    } catch (error) {
+      handlers.logger.error({ message: error });
+      return socket.emit(
+        "error",
+        handlers.event.error({
+          objectType: "error",
+          message: "Failed to get inbox"
+        })
+      );
+    }
+  });
+
+  socket.on("new-chat", async ({ senderId, receiverId, text, files }) => {
     try {
       const newChat = await chatController.newChat({
         senderId,
         receiverId,
-        text
+        text,
+        files
       });
 
-      return socket.emit("response", newChat);
+      socket.emit("response", newChat);
+      return io.to(receiverId.toString()).emit("response", newChat);
     } catch (error) {
       handlers.logger.error({ message: error });
       return socket.emit(
@@ -105,19 +128,17 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("get-chats", async ({ senderId, receiverId }) => {
+  socket.on("get-chats", async ({ senderId, receiverId, page, limit }) => {
     try {
-      const chats = await chatController.getChats({ senderId, receiverId });
+      const chats = await chatController.getChats({
+        senderId,
+        receiverId,
+        page,
+        limit
+      });
 
       handlers.logger.success({ message: "Messages", data: chats });
-      return socket.emit(
-        "response",
-        handlers.event.success({
-          objectType: "chats",
-          message: "Messages",
-          data: chats
-        })
-      );
+      return socket.emit("response", chats);
     } catch (error) {
       handlers.logger.error({ message: error });
       return socket.emit(
@@ -125,6 +146,28 @@ io.on("connection", async (socket) => {
         handlers.event.error({
           objectType: "error",
           message: "Couldn't refresh messages"
+        })
+      );
+    }
+  });
+
+  socket.on("chat-typing", async ({ senderId, receiverId }) => {
+    try {
+      const chatTyping = await chatController.chatTyping({
+        senderId,
+        receiverId
+      });
+
+      handlers.logger.success({ message: "Typing", data: chatTyping });
+      socket.emit("response", chatTyping);
+      return io.to(receiverId.toString()).emit("response", chatTyping);
+    } catch (error) {
+      handlers.logger.error({ message: error });
+      return socket.emit(
+        "error",
+        handlers.event.error({
+          objectType: "error",
+          message: "Couldn't type message"
         })
       );
     }

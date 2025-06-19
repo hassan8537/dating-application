@@ -3,8 +3,8 @@ class Controller {
     this.service = require("../../services/users/chat-service");
   }
 
-  async getInbox(req, res) {
-    await this.service.getInbox(req, res);
+  async getInbox(data) {
+    return await this.service.getInbox(data);
   }
 
   async newChat(data) {
@@ -13,6 +13,10 @@ class Controller {
 
   async getChats(data) {
     return await this.service.getChats(data);
+  }
+
+  async chatTyping(data) {
+    return await this.service.chatTyping(data);
   }
 }
 

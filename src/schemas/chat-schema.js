@@ -1,8 +1,5 @@
 const chatSchema = {
-  populate: [
-    { path: "sender_id", populate: "avatar" },
-    { path: "receiver_id", populate: "avatar" }
-  ]
+  populate: [{ path: "senderId receiverId" }]
 };
 
 module.exports = chatSchema;
