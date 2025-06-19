@@ -5,6 +5,10 @@ const Reel = require("../../models/Reel");
 const Reply = require("../../models/Reply");
 const { handlers } = require("../../utilities/handlers/handlers");
 const pagination = require("../../utilities/pagination/pagination");
+const {
+  addLikeAndSaveFlags,
+  addFlagsToSingleReel
+} = require("../../utilities/generators/add-like-save-reels");
 
 class Service {
   constructor() {
@@ -58,18 +62,36 @@ class Service {
   async getMyReels(req, res) {
     try {
       const { user, query } = req;
+      const page = parseInt(query.page, 10) || 1;
+      const limit = parseInt(query.limit, 10) || 10;
+      const skip = (page - 1) * limit;
+
       const filters = { userId: user._id };
       if (query.privacyControls)
         filters.privacyControls = query.privacyControls;
-      return await pagination({
+
+      const totalCount = await this.reel.countDocuments(filters);
+
+      let reels = await this.reel
+        .find(filters)
+        .sort(query.sort || { createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate(this.reelSchema.populate)
+        .lean();
+
+      reels = await addLikeAndSaveFlags(reels, user._id);
+
+      return handlers.response.success({
         res,
-        table: "Reels",
-        model: this.reel,
-        filters,
-        page: query.page,
-        limit: query.limit,
-        sort: query.sort,
-        populate: this.reelSchema.populate
+        message: "Reels retrieved successfully.",
+        data: {
+          results: reels,
+          totalRecords: totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          currentPage: page,
+          pageSize: limit
+        }
       });
     } catch (error) {
       return handlers.response.error({ res, message: error });
@@ -78,19 +100,37 @@ class Service {
 
   async getReels(req, res) {
     try {
-      const { query } = req;
+      const { user, query } = req;
+      const page = parseInt(query.page, 10) || 1;
+      const limit = parseInt(query.limit, 10) || 10;
+      const skip = (page - 1) * limit;
+
       const filters = {};
       if (query.privacyControls)
         filters.privacyControls = query.privacyControls;
-      return await pagination({
+
+      const totalCount = await this.reel.countDocuments(filters);
+
+      let reels = await this.reel
+        .find(filters)
+        .sort(query.sort || { createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate(this.reelSchema.populate)
+        .lean();
+
+      reels = await addLikeAndSaveFlags(reels, user._id);
+
+      return handlers.response.success({
         res,
-        table: "Reels",
-        model: this.reel,
-        filters,
-        page: query.page,
-        limit: query.limit,
-        sort: query.sort,
-        populate: this.reelSchema.populate
+        message: "Reels retrieved successfully.",
+        data: {
+          results: reels,
+          totalRecords: totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          currentPage: page,
+          pageSize: limit
+        }
       });
     } catch (error) {
       return handlers.response.error({ res, message: error });
@@ -99,18 +139,21 @@ class Service {
 
   async getReelById(req, res) {
     try {
-      const { query, params } = req;
+      const { user, query, params } = req;
       const { reelId } = params;
       const filters = {};
       if (query.privacyControls)
         filters.privacyControls = query.privacyControls;
 
-      const reel = await this.reel
+      let reel = await this.reel
         .findById(reelId)
-        .populate(this.reelSchema.populate);
+        .populate(this.reelSchema.populate)
+        .lean();
 
       if (!reel)
         return handlers.response.failed({ res, message: "Invalid reel ID" });
+
+      reel = await addFlagsToSingleReel(reel, user._id);
 
       return handlers.response.success({ res, message: "Success", data: reel });
     } catch (error) {
