@@ -114,19 +114,25 @@ io.on("connection", async (socket) => {
         files
       });
 
-      socket.emit("response", newChat);
+      // Emit the new chat message to both users
+      io.to(senderId.toString()).emit("response", newChat);
       io.to(receiverId.toString()).emit("response", newChat);
 
-      io.to(senderId.toString()).emit("get-inbox", { userId: senderId });
-      return io
-        .to(receiverId.toString())
-        .emit("get-inbox", { userId: receiverId });
+      // Emit updated inbox inside the same event: get-inbox
+      io.to(senderId.toString()).emit("get-inbox", {
+        userId: senderId
+      });
+      io.to(receiverId.toString()).emit("get-inbox", {
+        userId: receiverId
+      });
+      return;
     } catch (error) {
       handlers.logger.error({ message: error });
-      return socket.emit(
+
+      socket.emit(
         "error",
         handlers.event.error({
-          objectType: "error",
+          objectType: "new-chat",
           message: "Failed to send message"
         })
       );
