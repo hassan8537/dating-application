@@ -153,6 +153,12 @@ class Service {
             userId: targetUser._id,
             friendId: user._id
           }),
+          this.request.create({
+            senderId: user._id,
+            receiverId: targetUser._id,
+            type: "match",
+            status: "matched"
+          }),
           this.swipeRight.create({
             userId: user._id,
             likedUser: targetUser._id
@@ -176,6 +182,13 @@ class Service {
       const likedUser = await this.swipeRight.create({
         userId: user._id,
         likedUser: targetUser._id
+      });
+
+      this.request.create({
+        senderId: user._id,
+        receiverId: targetUser._id,
+        type: "match",
+        status: "pending"
       });
 
       user.totalProfilesILiked++;
@@ -236,7 +249,7 @@ class Service {
       const existingFriendRequest = await this.request.findOne({
         senderId: currentUser._id,
         receiverId: userId,
-        type: "friend-request",
+        type: "friend",
         status: "pending"
       });
 
@@ -250,7 +263,7 @@ class Service {
       await this.request.create({
         senderId: currentUser._id,
         receiverId: userId,
-        type: "friend-request",
+        type: "friend",
         status: "pending"
       });
 

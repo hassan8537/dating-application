@@ -14,12 +14,12 @@ const schema = new Schema(
     },
     type: {
       type: String,
-      enum: ["friend-request", "meet-me-now"],
+      enum: ["friend", "meet-me-now", "match"],
       required: true
     },
     status: {
       type: String,
-      enum: ["pending", "accept", "reject"],
+      enum: ["pending", "accepted", "rejected", "matched"],
       default: "pending"
     }
   },

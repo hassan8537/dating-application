@@ -13,7 +13,7 @@ const schema = new Schema(
         "mention",
         "message",
         "match",
-        "friend-request",
+        "friend",
         "super-like",
         "custom",
         "invitation",
