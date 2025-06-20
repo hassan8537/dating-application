@@ -237,19 +237,29 @@ class Service {
 
   async getSavedReels(req, res) {
     try {
-      const { query } = req;
+      const { page, limit, sort } = req.query;
+
+      const user = req.user;
+
+      const filters = { userId: user._id };
 
       return await pagination({
         res,
-        table: "Saved reels",
+        table: "Saved Reels",
         model: this.savedReel,
-        page: query.page,
-        limit: query.limit,
-        sort: query.sort,
-        populate: this.savedReelSchema.populate
+        page,
+        limit,
+        sort,
+        filters,
+        populate: {
+          path: "reelId"
+        },
+        match: {
+          reelId: { $ne: null }
+        }
       });
     } catch (error) {
-      return handlers.response.error({ res, message: error });
+      return handlers.response.error({ res, message: error.message || error });
     }
   }
 
@@ -290,19 +300,29 @@ class Service {
 
   async getLikedReels(req, res) {
     try {
-      const { query } = req;
+      const { page, limit, sort } = req.query;
+
+      const user = req.user;
+
+      const filters = { userId: user._id };
 
       return await pagination({
         res,
-        table: "Liked reels",
+        table: "Liked Reels",
         model: this.likedReel,
-        page: query.page,
-        limit: query.limit,
-        sort: query.sort,
-        populate: this.likedReelSchema.populate
+        page,
+        limit,
+        sort,
+        filters,
+        populate: {
+          path: "reelId"
+        },
+        match: {
+          reelId: { $ne: null }
+        }
       });
     } catch (error) {
-      return handlers.response.error({ res, message: error });
+      return handlers.response.error({ res, message: error.message || error });
     }
   }
 
