@@ -33,7 +33,7 @@ router.post("/sos", controller.setSos.bind(controller));
 
 router.put("/", controller.editProfile.bind(controller));
 
-router.post("/", controller.deleteAccount.bind(controller));
+router.delete("/", controller.deleteAccount.bind(controller));
 
 router.put("/change-password", controller.changePassword.bind(controller));
 

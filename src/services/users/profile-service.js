@@ -10,7 +10,6 @@ const userSchema = require("../../schemas/user-schema");
 const { timeToISODate } = require("../../utilities/formatters/iso-formatters");
 const { handlers } = require("../../utilities/handlers/handlers");
 const { comparePassword } = require("../../utilities/handlers/password");
-const pagination = require("../../utilities/pagination/pagination");
 
 class Service {
   constructor() {

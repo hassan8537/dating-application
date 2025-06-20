@@ -252,7 +252,8 @@ class Service {
         sort,
         filters,
         populate: {
-          path: "reelId"
+          path: "reelId",
+          populate: { path: "userId" }
         },
         match: {
           reelId: { $ne: null }
@@ -315,7 +316,8 @@ class Service {
         sort,
         filters,
         populate: {
-          path: "reelId"
+          path: "reelId",
+          populate: { path: "userId" }
         },
         match: {
           reelId: { $ne: null }

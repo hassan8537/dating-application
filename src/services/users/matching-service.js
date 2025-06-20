@@ -35,8 +35,28 @@ class Service {
       const pageSize = parseInt(limit, 10);
       const skip = (pageNumber - 1) * pageSize;
 
+      // Fetch all excluded user IDs
+      const [likedUsers, passedUsers, friends] = await Promise.all([
+        this.swipeRight.find({ userId: currentUser._id }, "likedUser"),
+        this.swipeLeft.find({ userId: currentUser._id }, "passedUser"),
+        this.friend.find({ userId: currentUser._id }, "friendId")
+      ]);
+
+      const likedUserIds = likedUsers.map((doc) => doc.likedUser.toString());
+      const passedUserIds = passedUsers.map((doc) => doc.passedUser.toString());
+      const friendUserIds = friends.map((doc) => doc.friendId.toString());
+
+      const excludedUserIds = new Set([
+        ...likedUserIds,
+        ...passedUserIds,
+        ...friendUserIds
+      ]);
+
+      // Always exclude self
+      excludedUserIds.add(currentUser._id.toString());
+
       const users = await this.user.find({
-        _id: { $ne: currentUser._id },
+        _id: { $nin: Array.from(excludedUserIds) },
         isActive: true,
         isProfileCompleted: true
       });
@@ -82,66 +102,91 @@ class Service {
 
   async swipeRightProfile(req, res) {
     try {
-      const { userId } = req.params;
+      const user = req.user;
+      const targetUserId = req.body.userId;
 
-      const [currentUser, targetUser] = await Promise.all([
-        this.user.findById(req.user._id),
-        this.user.findById(userId)
-      ]);
-
-      if (!currentUser || !targetUser) {
-        return handlers.response.unavailable({
+      const targetUser = await this.user.findById(targetUserId);
+      if (!targetUser) {
+        return handlers.response.failed({
           res,
           message: "User not found"
         });
       }
 
-      if (targetUser.isSwipeLeft === true) {
+      const isPassedProfile = await this.swipeLeft.findOne({
+        userId: user._id,
+        passedUser: targetUser._id
+      });
+
+      if (isPassedProfile) {
         return handlers.response.failed({
           res,
-          message: "You cannot like this profile"
+          message: "You have already passed this profile"
         });
       }
 
-      const isAnonymousProfile = currentUser.isAnonymousProfile;
-
-      const existingSwipeRight = await this.swipeRight.findOne({
-        userId: currentUser._id,
-        likedUser: userId
+      const isLikedProfile = await this.swipeRight.findOne({
+        userId: user._id,
+        likedUser: targetUser._id
       });
 
-      if (existingSwipeRight) {
+      if (isLikedProfile) {
+        return handlers.response.failed({
+          res,
+          message: "You have already liked this profile"
+        });
+      }
+
+      const isTargetUserLikedYou = await this.swipeRight.findOne({
+        userId: targetUser._id,
+        likedUser: user._id
+      });
+
+      // If the target user liked back, make them friends
+      if (isTargetUserLikedYou) {
+        await Promise.all([
+          this.friend.create({
+            userId: user._id,
+            friendId: targetUser._id
+          }),
+          this.friend.create({
+            userId: targetUser._id,
+            friendId: user._id
+          }),
+          this.swipeRight.create({
+            userId: user._id,
+            likedUser: targetUser._id
+          })
+        ]);
+
+        user.totalProfilesILiked++;
+
+        user.totalFriends++;
+        targetUser.totalFriends++;
+
+        await Promise.all([user.save(), targetUser.save()]);
+
         return handlers.response.success({
           res,
-          message: "You already have liked this profile"
+          message: "You are now friends!"
         });
       }
 
-      await this.swipeRight.create({
-        userId: currentUser._id,
-        likedUser: userId
+      // If not matched, just like the user
+      const likedUser = await this.swipeRight.create({
+        userId: user._id,
+        likedUser: targetUser._id
       });
 
-      currentUser.totalProfilesILiked++;
-      await currentUser.save();
-
-      const message = isAnonymousProfile
-        ? "Someone has liked your profile"
-        : `${currentUser.firstName} ${currentUser.lastName} has liked your profile`;
-
-      await this.notification.create({
-        senderId: currentUser._id,
-        receiverId: userId,
-        type: "like",
-        message: message
-      });
+      user.totalProfilesILiked++;
+      await user.save();
 
       return handlers.response.success({
         res,
-        message: "Liked"
+        message: "Success",
+        data: likedUser
       });
     } catch (error) {
-      handlers.logger.error({ message: error });
       return handlers.response.error({ res, message: error.message });
     }
   }
@@ -266,10 +311,6 @@ class Service {
 
       currentUser.totalProfilesIPassed++;
       await currentUser.save();
-
-      // Mark the target user as swiped left (unlikeable)
-      targetUser.isSwipeLeft = true;
-      await targetUser.save();
 
       return handlers.response.success({
         res,
