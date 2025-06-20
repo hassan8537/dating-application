@@ -237,30 +237,53 @@ class Service {
 
   async getSavedReels(req, res) {
     try {
-      const { page, limit, sort } = req.query;
+      const { page = 1, limit = 10 } = req.query;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
 
       const user = req.user;
 
       const filters = { userId: user._id };
 
-      return await pagination({
+      const [totalRecords, savedReels] = await Promise.all([
+        this.savedReel.countDocuments(filters),
+        this.savedReel
+          .find(filters)
+          .skip(skip)
+          .limit(parseInt(limit))
+          .sort({ createdAt: -1 }) // Optional: sort newest first
+          .populate({
+            path: "reelId",
+            populate: {
+              path: "userId"
+            }
+          })
+      ]);
+
+      const results = savedReels
+        .filter((item) => item.reelId && item.reelId.userId) // filter out invalid
+        .map((item) => {
+          const reel = item.reelId.toObject();
+          reel.isSaved = true;
+          reel.isLiked = true; // You can later enhance this check with a Like model if needed
+          return reel;
+        });
+
+      return handlers.response.success({
         res,
-        table: "Saved Reels",
-        model: this.savedReel,
-        page,
-        limit,
-        sort,
-        filters,
-        populate: {
-          path: "reelId",
-          populate: { path: "userId" }
-        },
-        match: {
-          reelId: { $ne: null }
+        message: "Saved reels retrieved successfully.",
+        data: {
+          results,
+          totalRecords,
+          totalPages: Math.ceil(totalRecords / limit),
+          currentPage: parseInt(page),
+          pageSize: parseInt(limit)
         }
       });
     } catch (error) {
-      return handlers.response.error({ res, message: error.message || error });
+      return handlers.response.error({
+        res,
+        message: error.message || error
+      });
     }
   }
 
@@ -301,30 +324,53 @@ class Service {
 
   async getLikedReels(req, res) {
     try {
-      const { page, limit, sort } = req.query;
+      const { page = 1, limit = 10 } = req.query;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
 
       const user = req.user;
 
       const filters = { userId: user._id };
 
-      return await pagination({
+      const [totalRecords, likedReels] = await Promise.all([
+        this.likedReel.countDocuments(filters),
+        this.likedReel
+          .find(filters)
+          .skip(skip)
+          .limit(parseInt(limit))
+          .sort({ createdAt: -1 }) // Optional: sort by newest liked
+          .populate({
+            path: "reelId",
+            populate: {
+              path: "userId"
+            }
+          })
+      ]);
+
+      const results = likedReels
+        .filter((item) => item.reelId && item.reelId.userId)
+        .map((item) => {
+          const reel = item.reelId.toObject();
+          reel.isLiked = true;
+          reel.isSaved = true; // Optional: change to actual check if needed
+          return reel;
+        });
+
+      return handlers.response.success({
         res,
-        table: "Liked Reels",
-        model: this.likedReel,
-        page,
-        limit,
-        sort,
-        filters,
-        populate: {
-          path: "reelId",
-          populate: { path: "userId" }
-        },
-        match: {
-          reelId: { $ne: null }
+        message: "Reels retrieved successfully.",
+        data: {
+          results,
+          totalRecords,
+          totalPages: Math.ceil(totalRecords / limit),
+          currentPage: parseInt(page),
+          pageSize: parseInt(limit)
         }
       });
     } catch (error) {
-      return handlers.response.error({ res, message: error.message || error });
+      return handlers.response.error({
+        res,
+        message: error.message || error
+      });
     }
   }
 
