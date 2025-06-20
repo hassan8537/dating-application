@@ -1,5 +1,5 @@
 const Friend = require("../../models/Friend");
-const FriendRequest = require("../../models/FriendRequest");
+const Request = require("../../models/Request");
 const Notification = require("../../models/Notification");
 const SwipeLeft = require("../../models/SwipeLeft");
 const SwipeRight = require("../../models/SwipeRight");
@@ -15,7 +15,7 @@ class Service {
     this.swipeRight = SwipeRight;
     this.swipeLeft = SwipeLeft;
     this.friend = Friend;
-    this.friendRequest = FriendRequest;
+    this.request = Request;
     this.notification = Notification;
   }
 
@@ -233,9 +233,10 @@ class Service {
         });
       }
 
-      const existingFriendRequest = await this.friendRequest.findOne({
+      const existingFriendRequest = await this.request.findOne({
         senderId: currentUser._id,
         receiverId: userId,
+        type: "friend-request",
         status: "pending"
       });
 
@@ -246,9 +247,10 @@ class Service {
         });
       }
 
-      await this.friendRequest.create({
+      await this.request.create({
         senderId: currentUser._id,
         receiverId: userId,
+        type: "friend-request",
         status: "pending"
       });
 

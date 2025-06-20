@@ -115,7 +115,10 @@ io.on("connection", async (socket) => {
       });
 
       socket.emit("response", newChat);
-      return io.to(receiverId.toString()).emit("response", newChat);
+      io.to(receiverId.toString()).emit("response", newChat);
+
+      socket.emit("get-inbox", { userId: senderId });
+      io.to(receiverId.toString()).emit("get-inbox", { userId: receiverId });
     } catch (error) {
       handlers.logger.error({ message: error });
       return socket.emit(

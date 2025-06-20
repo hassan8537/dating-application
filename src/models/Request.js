@@ -12,13 +12,19 @@ const schema = new Schema(
       ref: "User",
       trim: true
     },
+    type: {
+      type: String,
+      enum: ["friend-request", "meet-me-now"],
+      required: true
+    },
     status: {
       type: String,
-      enum: ["pending", "accept", "reject"]
+      enum: ["pending", "accept", "reject"],
+      default: "pending"
     }
   },
   { timestamps: true }
 );
 
-const FriendRequest = model("FriendRequest", schema);
-module.exports = FriendRequest;
+const Request = model("Request", schema);
+module.exports = Request;
