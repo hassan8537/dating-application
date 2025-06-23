@@ -3,12 +3,20 @@ class Controller {
     this.service = require("../../services/users/request-service");
   }
 
-  async getFriendRequests(req, res) {
-    return await this.service.getFriendRequests(req, res);
+  async getCurrentFriendRequests(req, res) {
+    return await this.service.getCurrentFriendRequests(req, res);
   }
 
-  async getMatchRequests(req, res) {
-    return await this.service.getMatchRequests(req, res);
+  async getPendingFriendRequests(req, res) {
+    return await this.service.getPendingFriendRequests(req, res);
+  }
+
+  async acceptFriendRequest(req, res) {
+    return await this.service.acceptFriendRequest(req, res);
+  }
+
+  async rejectFriendRequest(req, res) {
+    return await this.service.rejectFriendRequest(req, res);
   }
 }
 
