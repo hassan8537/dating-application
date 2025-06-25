@@ -103,9 +103,10 @@ class Service {
   async swipeRightProfile(req, res) {
     try {
       const user = req.user;
-      const targetUserId = req.body.userId;
+      const targetUserId = req.params.userId;
 
       const targetUser = await this.user.findById(targetUserId);
+
       if (!targetUser) {
         return handlers.response.failed({
           res,
