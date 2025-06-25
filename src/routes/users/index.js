@@ -23,6 +23,7 @@ const reelRoutes = require("./reel-routes");
 const exploreRoutes = require("./explore-routes");
 const friendRoutes = require("./friend-routes");
 const requestRoutes = require("./request-controller");
+const agoraRoutes = require("./agora-routes");
 
 // 🔹 Import Middlewares
 const userAuthentication = require("../../middlewares/user-authentication-middleware");
@@ -59,6 +60,7 @@ app.use("/api/v1/reels", middlewares, reelRoutes);
 app.use("/api/v1/explores", middlewares, exploreRoutes);
 app.use("/api/v1/friends", middlewares, friendRoutes);
 app.use("/api/v1/requests", middlewares, requestRoutes);
+app.use("/api/v1/agora", middlewares, agoraRoutes);
 
 app.use("/api/v1/contents", contentRoutes);
 
