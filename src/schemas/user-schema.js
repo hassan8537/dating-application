@@ -1,5 +1,5 @@
 const userSchema = {
-  populate: []
+  populate: [{}]
 };
 
 module.exports = userSchema;
