@@ -143,7 +143,7 @@ class Service {
         likedUser: user._id
       });
 
-      // If the target user liked back, make them friends
+      // ✅ CASE 1: Match (Mutual Like)
       if (isTargetUserLikedYou) {
         await Promise.all([
           this.friend.create({
@@ -166,10 +166,11 @@ class Service {
           })
         ]);
 
-        user.totalProfilesILiked++;
+        user.totalProfilesILiked = (user.totalProfilesILiked || 0) + 1;
+        targetUser.myTotalLikes = (targetUser.myTotalLikes || 0) + 1;
 
-        user.totalFriends++;
-        targetUser.totalFriends++;
+        user.totalFriends = (user.totalFriends || 0) + 1;
+        targetUser.totalFriends = (targetUser.totalFriends || 0) + 1;
 
         await Promise.all([user.save(), targetUser.save()]);
 
@@ -179,26 +180,28 @@ class Service {
         });
       }
 
-      // If not matched, just like the user
-      const likedUser = await this.swipeRight.create({
-        userId: user._id,
-        likedUser: targetUser._id
-      });
+      // ✅ CASE 2: One-sided like
+      await Promise.all([
+        this.swipeRight.create({
+          userId: user._id,
+          likedUser: targetUser._id
+        }),
+        this.request.create({
+          senderId: user._id,
+          receiverId: targetUser._id,
+          type: "match",
+          status: "pending"
+        })
+      ]);
 
-      this.request.create({
-        senderId: user._id,
-        receiverId: targetUser._id,
-        type: "match",
-        status: "pending"
-      });
+      user.totalProfilesILiked = (user.totalProfilesILiked || 0) + 1;
+      targetUser.myTotalLikes = (targetUser.myTotalLikes || 0) + 1;
 
-      user.totalProfilesILiked++;
-      await user.save();
+      await Promise.all([user.save(), targetUser.save()]);
 
       return handlers.response.success({
         res,
-        message: "Success",
-        data: likedUser
+        message: "Success"
       });
     } catch (error) {
       return handlers.response.error({ res, message: error.message });
