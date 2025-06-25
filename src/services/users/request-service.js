@@ -18,7 +18,11 @@ class Service {
 
       const { page, limit, status } = req.query;
 
-      const filters = { userId: user._id, type: "friend", status: "pending" };
+      const filters = {
+        receiverId: user._id,
+        type: "friend",
+        status: "pending"
+      };
 
       if (status) filters.status = status;
 
@@ -43,7 +47,7 @@ class Service {
       const { page, limit, status } = req.query;
 
       const filters = {
-        receiverId: user._id,
+        senderId: user._id,
         type: "friend",
         status: "pending"
       };
