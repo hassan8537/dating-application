@@ -1,4 +1,4 @@
-# Spont Network - Social Media Backend
+# Social Media Backend
 
 A comprehensive Node.js backend API for a social media platform with real-time chat functionality, content sharing, and advanced social features.
 
